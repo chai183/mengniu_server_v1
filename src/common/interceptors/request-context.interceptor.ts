@@ -16,17 +16,16 @@ export class RequestContextInterceptor implements NestInterceptor {
     //手动解析jwt
     const authHeader = request.headers.authorization;
     let user;
-
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.slice(7); // 去掉'Bearer '
       try {
         // 使用 JwtService 解析 token
-        const { sub } = this.jwtService.verify(token, {
+        const { userid } = this.jwtService.verify(token, {
           secret: this.configService.get('jwt.secretkey'),
           ignoreExpiration: true
         });
         user = {
-          id: sub
+          id: userid
         }
       } catch (error) {
         console.error('JWT解析错误', error);

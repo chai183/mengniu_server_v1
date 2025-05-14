@@ -78,3 +78,9 @@ user:
 wechat:
   appId: 'wxadcf1a92804e6a6f'
   appSecret: '1f219d513502421b75978636b7a82eb2'
+
+# 企业微信配置
+wecom:
+  corpId: 'ww86026687f756a822'
+  corpSecret: 'ug1sUAG9s-nQo3t_hBPf54cPVcVcZ4oqs2gkYZkyHsU'
+  agentId: '1000005'

@@ -17,4 +17,8 @@ export class FollowUp extends BaseEntity {
   @Column('text')
   @ApiProperty({ description: '跟进内容' })
   content: string;
+
+  @Column()
+  @ApiProperty({ description: '跟进类型' })
+  type: number;
 } 

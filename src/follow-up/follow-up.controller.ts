@@ -9,7 +9,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 // @UseGuards(JwtAuthGuard)
 @Controller('follow-up')
 export class FollowUpController {
-  constructor(private readonly followUpService: FollowUpService) {}
+  constructor(private readonly followUpService: FollowUpService) { }
 
   @Post()
   @ApiOperation({ summary: '创建跟进记录' })
@@ -26,9 +26,9 @@ export class FollowUpController {
 
   @Get('customer/:customerId')
   @ApiOperation({ summary: '获取特定客户的所有跟进记录' })
-  @ApiParam({ name: 'customerId', description: '客户ID' })
-  findByCustomerId(@Param('customerId', ParseIntPipe) customerId: number) {
-    return this.followUpService.findByCustomerId(customerId);
+  @ApiParam({ name: 'customerId', description: '客户ID' })  
+  findByCustomerId(@Param('customerId', ParseIntPipe) customerId: number, @Query('type') type: number) {
+    return this.followUpService.findByCustomerId(customerId, type);
   }
 
   @Get(':id')

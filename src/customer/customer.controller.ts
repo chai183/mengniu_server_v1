@@ -21,6 +21,7 @@ export class CustomerController {
     return this.customerService.findAll(query);
   }
 
+
   @Get('page')
   findAllPage(@Query() query: PageOptionsDto) {
     return this.customerService.findAllPage(query);
@@ -29,6 +30,11 @@ export class CustomerController {
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.customerService.findOne(id);
+  }
+
+  @Get('userid/:userid')
+  findOneByUserid(@Param('userid') userid: string) {
+    return this.customerService.findOneByUserid(userid);  
   }
 
   @Patch(':id')

@@ -23,10 +23,11 @@ export class FollowUpService {
     });
   }
 
-  async findByCustomerId(customerId: number): Promise<FollowUp[]> {
+  async findByCustomerId(customerId: number,type: number): Promise<FollowUp[]> {
     return this.followUpRepository.find({
       where: {
         customerId,
+        type,
         isDeleted: false,
       },
       order: {

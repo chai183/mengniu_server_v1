@@ -21,6 +21,12 @@ export class AuthController {
     return this.authService.wechatLogin(body.code);
   }
 
+  @Post('wecom/login')
+  async wecomLogin(@Body() body: { code: string }) {
+    return this.authService.wecomLogin(body.code);
+  }
+
+  
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   async logout(@Request() req, @Res({ passthrough: true }) response: Response) {

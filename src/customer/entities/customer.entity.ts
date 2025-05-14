@@ -9,9 +9,17 @@ export class Customer extends BaseEntity {
   @ApiProperty({ description: '客户名称' })
   name: string;
 
-  @Column()
+  @Column({ nullable: true })
   @ApiProperty({ description: '手机号' })
   phone: string;
+
+  @Column({ nullable: true })
+  @ApiProperty({ description: '头像' })
+  avatar: string;
+
+  @Column({ nullable: true })
+  @ApiProperty({ description: '性别' })
+  gender: number;
 
   @Column({ nullable: true })
   @ApiProperty({ description: '购买产品' })
@@ -25,4 +33,8 @@ export class Customer extends BaseEntity {
   @ApiProperty({ description: '跟进备注' })
   remark: string;
 
+
+  @Column({ nullable: true })
+  @ApiProperty({ description: '外部联系人的userid，注意不是企业成员的账号' })
+  userid: string;
 } 

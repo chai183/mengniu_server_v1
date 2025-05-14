@@ -11,4 +11,9 @@ export class CreateFollowUpDto {
   @IsNotEmpty()
   @ApiProperty({ description: '跟进内容' })
   content: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({ description: '跟进类型' })
+  type: number;
 } 
