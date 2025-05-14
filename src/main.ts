@@ -42,5 +42,12 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
   
   await app.listen(configService.get('app.port') || 3000);
+  
+  // 发送ready信号给PM2
+  if (process.send) {
+    process.send('ready');
+  }
+  
+  console.log(`应用已启动，运行在: ${await app.getUrl()}`);
 }
 bootstrap();
