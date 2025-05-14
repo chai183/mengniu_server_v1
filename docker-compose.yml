@@ -24,8 +24,8 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=123456
       - MYSQL_DATABASE=db_template
-    # volumes:
-    #   - /var/lib/mysql:/var/lib/mysql
+    volumes:
+      - /var/lib/mysql:/var/lib/mysql
     ports:
       - "3306:3306"
     restart: always
@@ -38,6 +38,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
+      - /var/www/static:/var/www/static
     depends_on:
       - app
     restart: always
