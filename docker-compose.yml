@@ -23,7 +23,7 @@ services:
     restart: always
     # 为PM2日志创建数据卷
     volumes:
-      - /root/.pm2/logs:/app/.pm2/logs
+      - /root/.pm2/logs:/root/.pm2/logs
     networks:
       - app-network
 
