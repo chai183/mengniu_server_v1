@@ -14,6 +14,8 @@ import { FollowUp } from './follow-up/entities/follow-up.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/index';
 
+console.log('process.env', process.env);
+
 @Module({
   imports: [
     // 配置模块
@@ -68,4 +70,4 @@ import configuration from './config/index';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

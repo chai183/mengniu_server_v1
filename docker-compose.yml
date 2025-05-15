@@ -9,7 +9,10 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - DB_HOST=db
+      # 使用host.docker.internal连接宿主机
+      - DB_HOST=host.docker.internal
+      # 注释掉固定IP方式
+      # - DB_HOST=172.17.0.1
       - DB_PORT=3306
       - DB_USERNAME=root
       - DB_PASSWORD=123456
@@ -18,41 +21,10 @@ services:
       - PM2_INSTANCES=max
       # PM2配置 - 内存限制
       - PM2_MAX_MEMORY_RESTART=1G
-    depends_on:
-      - db
     restart: always
     # 为PM2日志创建数据卷
     volumes:
       - /root/.pm2/logs:/root/.pm2/logs
-    networks:
-      - app-network
-
-  db:
-    image: mysql:8.0
-    environment:
-      - MYSQL_ROOT_PASSWORD=123456
-      - MYSQL_DATABASE=db_template
-    volumes:
-      - /var/lib/mysql:/var/lib/mysql
-    ports:
-      - "3306:3306"
-    restart: always
-    networks:
-      - app-network
-      
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - /var/www/static:/var/www/static
-    depends_on:
-      - app
-    restart: always
-    networks:
-      - app-network
-
-networks:
-  app-network:
-    driver: bridge
+    # 在Linux上启用host.docker.internal解析
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
