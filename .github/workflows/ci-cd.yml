@@ -75,9 +75,9 @@ jobs:
     - name: 部署到服务器
       uses: appleboy/ssh-action@master
       with:
-        host: 116.62.207.73
-        username: root
-        password: chai826300474.
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
         script: |
           cd /root/server-projects/mengniu_server
           docker-compose down
