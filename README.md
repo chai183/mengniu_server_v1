@@ -12,6 +12,7 @@
 - [访问应用](#访问应用)
 - [常见问题](#常见问题)
 - [维护与更新](#维护与更新)
+- [CI/CD 配置指南](#ci-cd-配置指南)
 
 ## 环境要求
 
@@ -160,4 +161,47 @@ docker-compose down
 ---
 
 如有其他部署问题，请联系技术支持。
+
+## CI/CD 配置指南
+
+## GitHub Actions CI/CD 配置
+
+本项目已配置了 GitHub Actions 实现持续集成和持续部署(CI/CD)。配置文件位于 `.github/workflows/ci-cd.yml`。
+
+### 工作流程说明
+
+此工作流程包含两个主要任务：
+
+1. **构建和测试 (build-and-test)**
+   - 检出代码
+   - 设置 Node.js 环境
+   - 安装依赖
+   - 运行代码检查
+   - 执行测试
+   - 构建项目
+   - 缓存构建产物
+
+2. **部署 (deploy)**
+   - 仅在主分支(main/master)的推送事件触发
+   - 提供两种部署方式选择:
+     - Docker 方式：构建并推送 Docker 镜像到 Docker Hub
+     - SSH 方式：通过 SSH 部署到远程服务器
+
+### 配置密钥
+
+使用 Docker 部署方式需要在 GitHub 仓库设置以下密钥：
+- `DOCKERHUB_USERNAME`: Docker Hub 用户名
+- `DOCKERHUB_TOKEN`: Docker Hub 访问令牌
+
+使用 SSH 部署方式需要设置以下密钥：
+- `SERVER_HOST`: 服务器主机地址
+- `SERVER_USERNAME`: 服务器用户名
+- `SSH_PRIVATE_KEY`: SSH 私钥
+
+### 设置密钥的步骤
+
+1. 进入 GitHub 仓库
+2. 点击 "Settings"
+3. 点击左侧菜单 "Secrets and variables" 下的 "Actions"
+4. 点击 "New repository secret" 添加密钥
 

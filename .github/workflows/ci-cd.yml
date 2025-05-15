@@ -1,0 +1,85 @@
+name: CI/CD 工作流
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置 Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: 安装依赖
+      run: npm ci
+      
+    - name: 代码检查
+      run: npm run lint
+      
+    - name: 运行测试
+      run: npm test
+      
+    - name: 构建项目
+      run: npm run build
+      
+    - name: 缓存构建产物
+      uses: actions/cache@v4
+      with:
+        path: |
+          dist
+          node_modules
+        key: ${{ runner.os }}-build-${{ github.sha }}
+        
+  deploy:
+    needs: build-and-test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+      
+    - name: 恢复缓存的构建产物
+      uses: actions/cache@v4
+      with:
+        path: |
+          dist
+          node_modules
+        key: ${{ runner.os }}-build-${{ github.sha }}
+      
+    # 选择以下部署方式之一
+    
+    # 方式一：使用 Docker 构建和推送到 Docker Registry
+    # - name: 登录到 Docker Hub
+    #   uses: docker/login-action@v3
+    #   with:
+    #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+    #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    # - name: 构建并推送 Docker 镜像
+    #   uses: docker/build-push-action@v5
+    #   with:
+    #     context: .
+    #     push: true
+    #     tags: 用户名/镜像名:latest,用户名/镜像名:${{ github.sha }}
+    
+    # 方式二：SSH 部署到服务器
+    - name: 部署到服务器
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /root/server-projects/mengniu_server
+          git pull
+          docker-compose down
+          docker-compose up -d --build
