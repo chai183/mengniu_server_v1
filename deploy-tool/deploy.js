@@ -1,6 +1,6 @@
 /**
  * Node.js 部署脚本
- * 请先安装依赖: npm install node-ssh ora chalk
+ * 请先安装依赖: npm install node-ssh ora chalk inquirer
  */
 
 const { exec } = require('child_process');
@@ -13,8 +13,7 @@ const config = {
   server: {
     host: '116.62.207.73',
     username: 'root',
-    password: 'Chai826300474.', // 或使用privateKey
-    // privateKey: require('fs').readFileSync('/path/to/key', 'utf8')
+    // 删除硬编码的密码
   },
   remotePath: '/root/server-projects/mengniu_server'
 };
@@ -53,13 +52,40 @@ async function buildApp() {
   }
 }
 
+// 获取用户密码
+async function getPassword() {
+  // 动态导入 inquirer (ESM 模块)
+  const { default: inquirer } = await import('inquirer');
+  
+  const answers = await inquirer.prompt([
+    {
+      type: 'password',
+      name: 'password',
+      message: '请输入服务器密码:',
+      mask: '*'
+    }
+  ]);
+  return answers.password;
+}
+
 // 部署应用
 async function deployApp() {
-  const spinner = ora('连接到服务器...').start();
+  const spinner = ora('准备连接到服务器...').start();
   const ssh = new NodeSSH();
 
   try {
-    await ssh.connect(config.server);
+    // 获取用户输入的密码
+    spinner.stop();
+    const password = await getPassword();
+    spinner.text = '连接到服务器...';
+    spinner.start();
+
+    // 使用用户输入的密码连接
+    await ssh.connect({
+      ...config.server,
+      password
+    });
+    
     spinner.succeed('服务器连接成功');
 
     spinner.text = '执行远程部署命令...';
