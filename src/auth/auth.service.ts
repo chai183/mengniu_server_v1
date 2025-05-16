@@ -52,30 +52,29 @@ export class AuthService {
   }
 
   async wechatLogin(code: string) {
-    // try {
-    //   // 微信小程序配置信息，应该存储在环境变量或配置文件中
-    //   const appId = this.configService.get('wechat.appId');
-    //   const appSecret = this.configService.get('wechat.appSecret');
+    try {
+      // 微信小程序配置信息，应该存储在环境变量或配置文件中
+      const appId = this.configService.get('wechat.appId');
+      const appSecret = this.configService.get('wechat.appSecret');
 
-    //   // 调用微信接口获取openid和session_key
-    //   const { userid } = await code2Session({
-    //     appId,
-    //     appSecret,
-    //     code
-    //   });
+      const url = `https://api.weixin.qq.com/sns/jscode2session?appid=${appId}&secret=${appSecret}&js_code=${code}&grant_type=authorization_code`
+      const response = await axios.get(url);
 
-    //   // 生成JWT token
-    //   const payload = { sub: userid };
+      if (response.data.errcode) {
+        throw new HttpException(`微信登录失败: ${response.data.errmsg}`, HttpStatus.BAD_REQUEST);
+      }
 
-    //   return {
-    //     token: this.jwtService.sign(payload)
-    //   };
-    // } catch (error) {
-    //   if (error instanceof HttpException) {
-    //     throw error;
-    //   }
-    //   throw new HttpException('微信登录处理失败', HttpStatus.INTERNAL_SERVER_ERROR);
-    // }
+      return {
+        token: this.generateJwtToken({
+          userid: response.data.openid
+        }),
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('微信登录处理失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async wecomLogin(code: string) {
@@ -97,14 +96,9 @@ export class AuthService {
         js_code: code
       });
 
-      // 生成JWT token
-      const payload = {
-        userid
-      };
-
       return {
-        token: this.jwtService.sign(payload,{
-          expiresIn: '3650d'
+        token: this.generateJwtToken({
+          userid
         }),
       };
     } catch (error) {
@@ -113,6 +107,13 @@ export class AuthService {
       }
       throw new HttpException('企业微信登录处理失败', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  //生成JWT token
+  async generateJwtToken(payload: any) {
+    return this.jwtService.sign(payload, {
+      expiresIn: '3650d'
+    });
   }
 
   async logout(userId: number) {
