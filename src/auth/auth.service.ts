@@ -63,11 +63,11 @@ export class AuthService {
       if (response.data.errcode) {
         throw new HttpException(`微信登录失败: ${response.data.errmsg}`, HttpStatus.BAD_REQUEST);
       }
-
+      const token = await this.generateJwtToken({
+        userid: response.data.openid
+      });
       return {
-        token: this.generateJwtToken({
-          userid: response.data.openid
-        }),
+        token: token,
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -96,10 +96,11 @@ export class AuthService {
         js_code: code
       });
 
+      const token = await this.generateJwtToken({
+        userid: userid
+      });
       return {
-        token: this.generateJwtToken({
-          userid
-        }),
+        token: token,
       };
     } catch (error) {
       if (error instanceof HttpException) {
