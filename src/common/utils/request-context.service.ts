@@ -3,7 +3,9 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { User } from '../../user/entities/user.entity';
 
 interface RequestContext {
-  user?: User;
+  user?: {
+    id: number;
+  };
 }
 
 @Injectable({ scope: Scope.DEFAULT })
@@ -14,7 +16,7 @@ export class RequestContextService {
    * 设置当前请求上下文中的用户
    * @param user 当前用户
    */
-  static setCurrentUser(user: User): void {
+  static setCurrentUser(user: { id: number }): void {
     const store = this.asyncLocalStorage.getStore();
     if (store) {
       store.user = user;
@@ -25,7 +27,7 @@ export class RequestContextService {
    * 获取当前请求上下文中的用户
    * @returns 当前用户或undefined
    */
-  static getCurrentUser(): User | undefined {
+  static getCurrentUser(): { id: number } | undefined {
     const store = this.asyncLocalStorage.getStore();
     return store?.user;
   }

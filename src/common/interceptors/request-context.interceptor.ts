@@ -15,7 +15,9 @@ export class RequestContextInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     //手动解析jwt
     const authHeader = request.headers.authorization;
-    let user;
+    let user = {
+      id: 1
+    };
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.slice(7); // 去掉'Bearer '
       try {
