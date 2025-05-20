@@ -5,38 +5,38 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+  # build-and-test:
+  #   runs-on: ubuntu-latest
 
-    steps:
-    - name: 检出代码
-      uses: actions/checkout@v4
+  #   steps:
+  #   - name: 检出代码
+  #     uses: actions/checkout@v4
 
-    - name: 设置 Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
+  #   - name: 设置 Node.js
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: '18'
+  #       cache: 'npm'
         
-    - name: 安装依赖
-      run: npm ci
+  #   - name: 安装依赖
+  #     run: npm ci
       
-    # - name: 代码检查
-    #   run: npm run lint
+  #   # - name: 代码检查
+  #   #   run: npm run lint
       
-    # - name: 运行测试
-    #   run: npm test
+  #   # - name: 运行测试
+  #   #   run: npm test
       
-    - name: 构建项目
-      run: npm run build
+  #   - name: 构建项目
+  #     run: npm run build
       
-    - name: 缓存构建产物
-      uses: actions/cache@v4
-      with:
-        path: |
-          dist
-          node_modules
-        key: ${{ runner.os }}-build-${{ github.sha }}
+  #   - name: 缓存构建产物
+  #     uses: actions/cache@v4
+  #     with:
+  #       path: |
+  #         dist
+  #         node_modules
+  #       key: ${{ runner.os }}-build-${{ github.sha }}
         
   deploy:
     needs: build-and-test
@@ -44,16 +44,16 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: 检出代码
-      uses: actions/checkout@v4
+    # - name: 检出代码
+    #   uses: actions/checkout@v4
       
-    - name: 恢复缓存的构建产物
-      uses: actions/cache@v4
-      with:
-        path: |
-          dist
-          node_modules
-        key: ${{ runner.os }}-build-${{ github.sha }}
+    # - name: 恢复缓存的构建产物
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: |
+    #       dist
+    #       node_modules
+    #     key: ${{ runner.os }}-build-${{ github.sha }}
       
     # 选择以下部署方式之一
     
@@ -77,7 +77,7 @@ jobs:
       with:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USERNAME }}
-        password: ${{ secrets.SSH_PASSWORD }}
+        password: ${{ secrets.SERVER_PASSWORD }}
         script: |
           cd /root/server-projects/mengniu_server
           git pull
