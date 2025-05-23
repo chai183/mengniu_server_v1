@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert, BeforeUpdate, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { Exclude } from 'class-transformer';
-import { RequestContextService } from 'src/common/utils/request-context.service';
+import { RequestContextService } from '../utils/request-context.service';
 
 @Entity()
 export class BaseEntity {
@@ -74,4 +74,4 @@ export class User extends BaseEntity {
   async validatePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);
   }
-}
+} 

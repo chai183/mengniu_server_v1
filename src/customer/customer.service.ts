@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Customer } from './entities/customer.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Customer } from '../common/entities';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { BusinessException } from '../common/exceptions/business.exception';

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FollowUpController } from './follow-up.controller';
 import { FollowUpService } from './follow-up.service';
-import { FollowUp } from './entities/follow-up.entity';
+import { FollowUp } from '../common/entities';
 import { BaseRepositoryModule } from '../common/modules/base.repository.module';
 
 @Module({

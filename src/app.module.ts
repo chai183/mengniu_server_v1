@@ -1,16 +1,14 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { User } from './user/entities/user.entity';
+import { User, Customer, FollowUp } from './common/entities';
 import { AuthModule } from './auth/auth.module';
 import { JwtStrategy } from './common/strategies/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { RequestContextInterceptor } from './common/interceptors/request-context.interceptor';
 import { CustomerModule } from './customer/customer.module';
-import { Customer } from './customer/entities/customer.entity';
 import { FollowUpModule } from './follow-up/follow-up.module';
-import { FollowUp } from './follow-up/entities/follow-up.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/index';
 

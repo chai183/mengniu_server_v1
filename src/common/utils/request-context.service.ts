@@ -1,6 +1,6 @@
 import { Injectable, Scope } from '@nestjs/common';
 import { AsyncLocalStorage } from 'async_hooks';
-import { User } from '../../user/entities/user.entity';
+import { User } from '../entities';
 
 interface RequestContext {
   user?: {

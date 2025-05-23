@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { FollowUp } from './entities/follow-up.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { FollowUp } from '../common/entities';
 import { CreateFollowUpDto, UpdateFollowUpDto } from './dto';
 import { BaseRepository, InjectBaseRepository } from '../common/repository/base.repository';
 
