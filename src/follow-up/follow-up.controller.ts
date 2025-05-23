@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntP
 import { FollowUpService } from './follow-up.service';
 import { CreateFollowUpDto, UpdateFollowUpDto } from './dto';
 import { ApiTags, ApiOperation, ApiParam, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PageOptionsDto } from '../common/dto/page-customer.dto';
 
 @ApiTags('跟进记录')
 @ApiBearerAuth()
@@ -10,6 +10,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('follow-up')
 export class FollowUpController {
   constructor(private readonly followUpService: FollowUpService) { }
+
+  @Get('page')
+  findAllPage(@Query() query: PageOptionsDto) {
+    return this.followUpService.findAllPage(query);
+  }
 
   @Post()
   @ApiOperation({ summary: '创建跟进记录' })
@@ -55,4 +60,5 @@ export class FollowUpController {
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.followUpService.remove(id);
   }
+  
 } 
