@@ -1,73 +1,53 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { LoginUserDto } from './dto/login-user.dto';
 import { BusinessException } from '../common/exceptions/business.exception';
-import { Between, Like } from 'typeorm';
+import { BaseRepository, InjectBaseRepository } from '../common/repository/base.repository';
 
 @Injectable()
 export class UserService {
 
-  @InjectRepository(User)
-  private readonly userRepository: Repository<User>;
+  @InjectBaseRepository(User)
+  private readonly userRepository: BaseRepository<User>;
+
 
   async create(createUserDto: CreateUserDto) {
-    const newUser = await this.userRepository.create(createUserDto)
-    return this.userRepository.save(newUser);
+    return this.userRepository.create(createUserDto);
   }
 
   findAll() {
-    return this.userRepository.find();
+    return this.userRepository.findAll();
   }
 
   //分页获取用户  
   async findAllPage(query: any) {
-    const { page, limit, 'createTime[]': createTime, 'updateTime[]': updateTime, account, ...rest } = query;
-    const [users, total] = await this.userRepository.findAndCount({
-      skip: (page - 1) * limit,
-      take: limit,
-      where: {
-        ...rest,
-        account: account ? Like(`%${account}%`) : undefined,
-        createTime: createTime ? Between(createTime[0], createTime[1]) : undefined,
-        updateTime: updateTime ? Between(updateTime[0], updateTime[1]) : undefined
-      }
-    });
-    return {
-      data: users,
-      total
-    };
+    return this.userRepository.findAllPage(query);
   }
 
   findOne(id: number) {
-    return this.userRepository.findOne({ where: { id } });
+    return this.userRepository.findOne(id);
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) {
-      throw new BusinessException(1001, '用户不存在');
-    }
     //校验账号是否存在
     if (updateUserDto.account) {
-      const user = await this.userRepository.findOne({ where: { account: updateUserDto.account } });
-      if (user && user.id !== id) {
+      const existingUser = await this.findByAccount(updateUserDto.account);
+      if (existingUser && existingUser.id !== id) {
         throw new BusinessException(1001, '账号已存在');
       }
     }
-
     return this.userRepository.update(id, updateUserDto);
   }
 
   remove(id: number) {
-    return this.userRepository.delete(id);
+    return this.userRepository.remove(id);
   }
 
   async findByAccount(account: string) {
-    return this.userRepository.findOne({ where: { account } });
+    const users = await this.userRepository.findAll();
+    return users.find(user => user.account === account);
   }
 
   async login(loginUserDto: LoginUserDto) {

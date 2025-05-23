@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { IsAccountUniqueConstraint } from './validators/is-account-unique.validator';
+import { BaseRepositoryModule } from '../common/modules/base.repository.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])],
+  imports: [BaseRepositoryModule.forFeature([User])],
   controllers: [UserController],
   providers: [UserService, IsAccountUniqueConstraint],
   exports: [UserService],
