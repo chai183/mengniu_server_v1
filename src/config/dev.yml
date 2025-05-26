@@ -78,6 +78,10 @@ user:
 wechat:
   appId: 'wxadcf1a92804e6a6f'
   appSecret: '1f219d513502421b75978636b7a82eb2'
+  suiteId: 'wwe22aaa879c937c05'
+  suiteSecret: '	bmb_Q6wjCWl1cK_-vjNAOVv_o5KtlFnL_X3q1ruDcns'
+  token: 'Hfw4xEwg1i'
+  encodingAesKey: '3N7UhnSKXORVocYD3Qpee355wOcgLMJESdSM2X9iywN'
 
 # 企业微信配置
 wecom:

@@ -11,8 +11,8 @@ export class WechatService {
 
   constructor(private configService: ConfigService) {
     // 从配置中获取企业微信应用的Token和EncodingAESKey
-    this.token = this.configService.get<string>('WECHAT_TOKEN') || '';
-    this.encodingAESKey = this.configService.get<string>('WECHAT_ENCODING_AES_KEY') || '';
+    this.token = this.configService.get<string>('wechat.token') || '';
+    this.encodingAESKey = this.configService.get<string>('wechat.encodingAesKey') || '';
   }
 
   /**

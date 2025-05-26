@@ -15,8 +15,8 @@ describe('WechatService', () => {
           useValue: {
             get: jest.fn((key: string) => {
               const config = {
-                'WECHAT_TOKEN': 'test_token',
-                'WECHAT_ENCODING_AES_KEY': 'test_encoding_aes_key',
+                'wechat.token': 'test_token',
+                'wechat.encodingAesKey': 'test_encoding_aes_key',
               };
               return config[key];
             }),
@@ -34,8 +34,8 @@ describe('WechatService', () => {
   });
 
   it('should load configuration correctly', () => {
-    expect(configService.get('WECHAT_TOKEN')).toBe('test_token');
-    expect(configService.get('WECHAT_ENCODING_AES_KEY')).toBe('test_encoding_aes_key');
+    expect(configService.get('wechat.token')).toBe('test_token');
+    expect(configService.get('wechat.encodingAesKey')).toBe('test_encoding_aes_key');
   });
 
   describe('validateCallback', () => {

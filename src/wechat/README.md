@@ -20,10 +20,10 @@
 
 ```bash
 # 企业微信第三方应用配置
-WECHAT_SUITE_ID=your_suite_id
-WECHAT_SUITE_SECRET=your_suite_secret
-WECHAT_TOKEN=your_token
-WECHAT_ENCODING_AES_KEY=your_encoding_aes_key
+wechat.suiteId=your_suite_id
+wechat.suiteSecret=your_suite_secret
+wechat.token=your_token
+wechat.encodingAesKey=your_encoding_aes_key
 ```
 
 ### 2. 获取配置信息

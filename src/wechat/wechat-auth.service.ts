@@ -10,8 +10,8 @@ export class WechatAuthService {
   private readonly redirectUri: string;
 
   constructor(private configService: ConfigService) {
-    this.suiteId = this.configService.get<string>('WECHAT_SUITE_ID') || '';
-    this.suiteSecret = this.configService.get<string>('WECHAT_SUITE_SECRET') || '';
+    this.suiteId = this.configService.get<string>('wechat.suiteId') || '';
+    this.suiteSecret = this.configService.get<string>('wechat.suiteSecret') || '';
     this.redirectUri = this.configService.get<string>('WECHAT_REDIRECT_URI') || '';
   }
 
