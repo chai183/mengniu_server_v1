@@ -40,6 +40,7 @@
     "@types/passport": "^1.0.17",
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
+    "@wecom/crypto": "^1.0.1",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
@@ -51,10 +52,12 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "pm2": "^6.0.6",
+    "raw-body": "^3.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",
-    "typeorm": "^0.3.22"
+    "typeorm": "^0.3.22",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

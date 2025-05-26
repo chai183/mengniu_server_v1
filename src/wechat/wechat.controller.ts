@@ -1,0 +1,369 @@
+import { Controller, Get, Post, Query, Req, Res, Logger, HttpStatus } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { WechatService } from './wechat.service';
+import { WechatAuthService } from './wechat-auth.service';
+import * as getRawBody from 'raw-body';
+
+@Controller('wechat')
+export class WechatController {
+  private readonly logger = new Logger(WechatController.name);
+
+  constructor(
+    private readonly wechatService: WechatService,
+    private readonly wechatAuthService: WechatAuthService,
+  ) {}
+
+  /**
+   * 生成企业微信扫码登录URL
+   */
+  @Get('auth/qrcode-url')
+  async getQRCodeLoginUrl(@Query('state') state?: string) {
+    try {
+      const loginUrl = this.wechatAuthService.generateQRCodeLoginUrl(state);
+      return {
+        success: true,
+        data: {
+          loginUrl,
+        },
+      };
+    } catch (error) {
+      this.logger.error('生成扫码登录URL时发生错误:', error);
+      return {
+        success: false,
+        message: '生成登录URL失败',
+      };
+    }
+  }
+
+  /**
+   * 处理授权回调
+   */
+  @Get('auth/callback')
+  async handleAuthCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Res() res: Response,
+  ) {
+    try {
+      this.logger.log(`收到授权回调: code=${code}, state=${state}`);
+      
+      // 这里可以根据code获取用户信息
+      // 需要先获取suite_access_token，然后获取企业access_token
+      // 最后通过code获取用户信息
+      
+      // 示例：重定向到前端页面
+      res.redirect(`/login-success?code=${code}&state=${state}`);
+    } catch (error) {
+      this.logger.error('处理授权回调时发生错误:', error);
+      res.redirect('/login-error');
+    }
+  }
+
+  /**
+   * 获取授权安装链接
+   */
+  @Get('auth/install-url')
+  async getInstallUrl(@Query('suite_ticket') suiteTicket: string, @Query('state') state?: string) {
+    try {
+      if (!suiteTicket) {
+        return {
+          success: false,
+          message: 'suite_ticket参数必填',
+        };
+      }
+
+      // 获取suite_access_token
+      const suiteAccessToken = await this.wechatAuthService.getSuiteAccessToken(suiteTicket);
+      
+      // 获取预授权码
+      const preAuthCode = await this.wechatAuthService.getPreAuthCode(suiteAccessToken);
+      
+      // 生成授权安装链接
+      const installUrl = this.wechatAuthService.generateAuthInstallUrl(preAuthCode, state);
+      
+      return {
+        success: true,
+        data: {
+          installUrl,
+          preAuthCode,
+        },
+      };
+    } catch (error) {
+      this.logger.error('生成授权安装链接时发生错误:', error);
+      return {
+        success: false,
+        message: '生成授权链接失败',
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * 处理企业授权回调
+   */
+  @Get('auth/install-callback')
+  async handleInstallCallback(
+    @Query('auth_code') authCode: string,
+    @Query('state') state: string,
+    @Query('suite_ticket') suiteTicket: string,
+  ) {
+    try {
+      this.logger.log(`收到企业授权回调: auth_code=${authCode}, state=${state}`);
+      
+      if (!authCode || !suiteTicket) {
+        return {
+          success: false,
+          message: '缺少必要参数',
+        };
+      }
+
+      // 获取suite_access_token
+      const suiteAccessToken = await this.wechatAuthService.getSuiteAccessToken(suiteTicket);
+      
+      // 获取企业永久授权码
+      const permanentInfo = await this.wechatAuthService.getPermanentCode(suiteAccessToken, authCode);
+      
+      return {
+        success: true,
+        data: permanentInfo,
+      };
+    } catch (error) {
+      this.logger.error('处理企业授权回调时发生错误:', error);
+      return {
+        success: false,
+        message: '处理授权回调失败',
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * 数据回调URL验证 - GET请求
+   * 用于验证回调URL的有效性
+   */
+  @Get('callback/data')
+  async validateDataCallback(
+    @Query('msg_signature') msgSignature: string,
+    @Query('timestamp') timestamp: string,
+    @Query('nonce') nonce: string,
+    @Query('echostr') echostr: string,
+    @Res() res: Response,
+  ) {
+    this.logger.log('收到数据回调URL验证请求');
+    this.logger.log(`参数: msg_signature=${msgSignature}, timestamp=${timestamp}, nonce=${nonce}, echostr=${echostr}`);
+
+    try {
+      const message = this.wechatService.validateCallback(msgSignature, timestamp, nonce, echostr);
+      
+      if (message) {
+        this.logger.log('数据回调URL验证成功');
+        res.status(HttpStatus.OK).send(message);
+      } else {
+        this.logger.error('数据回调URL验证失败');
+        res.status(HttpStatus.UNAUTHORIZED).send('验证失败');
+      }
+    } catch (error) {
+      this.logger.error('数据回调URL验证时发生错误:', error);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('服务器错误');
+    }
+  }
+
+  /**
+   * 指令回调URL验证 - GET请求
+   * 用于验证回调URL的有效性
+   */
+  @Get('callback/command')
+  async validateCommandCallback(
+    @Query('msg_signature') msgSignature: string,
+    @Query('timestamp') timestamp: string,
+    @Query('nonce') nonce: string,
+    @Query('echostr') echostr: string,
+    @Res() res: Response,
+  ) {
+    this.logger.log('收到指令回调URL验证请求');
+    this.logger.log(`参数: msg_signature=${msgSignature}, timestamp=${timestamp}, nonce=${nonce}, echostr=${echostr}`);
+
+    try {
+      const message = this.wechatService.validateCallback(msgSignature, timestamp, nonce, echostr);
+      
+      if (message) {
+        this.logger.log('指令回调URL验证成功');
+        res.status(HttpStatus.OK).send(message);
+      } else {
+        this.logger.error('指令回调URL验证失败');
+        res.status(HttpStatus.UNAUTHORIZED).send('验证失败');
+      }
+    } catch (error) {
+      this.logger.error('指令回调URL验证时发生错误:', error);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('服务器错误');
+    }
+  }
+
+  /**
+   * 数据回调 - POST请求
+   * 接收用户消息、进入应用事件、通讯录变更事件等
+   */
+  @Post('callback/data')
+  async handleDataCallback(
+    @Query('msg_signature') msgSignature: string,
+    @Query('timestamp') timestamp: string,
+    @Query('nonce') nonce: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    this.logger.log('收到数据回调POST请求');
+
+    try {
+      // 获取原始XML数据
+      const xmlBody = await getRawBody(req, {
+        length: req.headers['content-length'],
+        limit: '1mb',
+        encoding: 'utf-8',
+      });
+
+      this.logger.log(`接收到的XML数据: ${xmlBody}`);
+
+      // 处理回调数据
+      const callbackData = await this.wechatService.handlePostCallback(
+        msgSignature,
+        timestamp,
+        nonce,
+        xmlBody.toString(),
+      );
+
+      // 根据回调类型进行不同处理
+      await this.processDataCallback(callbackData);
+
+      // 响应成功
+      res.status(HttpStatus.OK).send('success');
+    } catch (error) {
+      this.logger.error('处理数据回调时发生错误:', error);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('error');
+    }
+  }
+
+  /**
+   * 指令回调 - POST请求
+   * 接收应用授权变更事件和suite_ticket
+   */
+  @Post('callback/command')
+  async handleCommandCallback(
+    @Query('msg_signature') msgSignature: string,
+    @Query('timestamp') timestamp: string,
+    @Query('nonce') nonce: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    this.logger.log('收到指令回调POST请求');
+
+    try {
+      // 获取原始XML数据
+      const xmlBody = await getRawBody(req, {
+        length: req.headers['content-length'],
+        limit: '1mb',
+        encoding: 'utf-8',
+      });
+
+      this.logger.log(`接收到的XML数据: ${xmlBody}`);
+
+      // 处理回调数据
+      const callbackData = await this.wechatService.handlePostCallback(
+        msgSignature,
+        timestamp,
+        nonce,
+        xmlBody.toString(),
+      );
+
+      // 根据回调类型进行不同处理
+      await this.processCommandCallback(callbackData);
+
+      // 响应成功
+      res.status(HttpStatus.OK).send('success');
+    } catch (error) {
+      this.logger.error('处理指令回调时发生错误:', error);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).send('error');
+    }
+  }
+
+  /**
+   * 处理数据回调的具体逻辑
+   */
+  private async processDataCallback(callbackData: any): Promise<void> {
+    try {
+      const { MsgType, Event } = callbackData.xml || {};
+
+      this.logger.log(`数据回调类型: MsgType=${MsgType}, Event=${Event}`);
+
+      // 根据消息类型和事件类型进行处理
+      switch (MsgType) {
+        case 'text':
+          // 处理文本消息
+          this.logger.log('收到文本消息:', callbackData.xml.Content);
+          break;
+        case 'event':
+          await this.handleEvent(callbackData);
+          break;
+        default:
+          this.logger.log(`未处理的消息类型: ${MsgType}`);
+      }
+    } catch (error) {
+      this.logger.error('处理数据回调逻辑时发生错误:', error);
+    }
+  }
+
+  /**
+   * 处理指令回调的具体逻辑
+   */
+  private async processCommandCallback(callbackData: any): Promise<void> {
+    try {
+      const { InfoType } = callbackData.xml || {};
+
+      this.logger.log(`指令回调类型: InfoType=${InfoType}`);
+
+      switch (InfoType) {
+        case 'suite_ticket':
+          // 处理suite_ticket
+          await this.wechatService.handleSuiteTicket(callbackData);
+          break;
+        case 'create_auth':
+        case 'cancel_auth':
+        case 'change_auth':
+          // 处理授权变更事件
+          await this.wechatService.handleAuthChange(callbackData);
+          break;
+        default:
+          this.logger.log(`未处理的指令类型: ${InfoType}`);
+      }
+    } catch (error) {
+      this.logger.error('处理指令回调逻辑时发生错误:', error);
+    }
+  }
+
+  /**
+   * 处理事件类型的消息
+   */
+  private async handleEvent(callbackData: any): Promise<void> {
+    try {
+      const { Event, EventKey } = callbackData.xml;
+
+      switch (Event) {
+        case 'enter_agent':
+          this.logger.log('用户进入应用');
+          break;
+        case 'menu_click':
+          this.logger.log(`菜单点击事件: ${EventKey}`);
+          break;
+        case 'subscribe':
+          this.logger.log('用户关注事件');
+          break;
+        case 'unsubscribe':
+          this.logger.log('用户取消关注事件');
+          break;
+        default:
+          this.logger.log(`未处理的事件类型: ${Event}`);
+      }
+    } catch (error) {
+      this.logger.error('处理事件时发生错误:', error);
+    }
+  }
+} 

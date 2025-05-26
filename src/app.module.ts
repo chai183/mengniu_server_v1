@@ -11,6 +11,7 @@ import { CustomerModule } from './customer/customer.module';
 import { FollowUpModule } from './follow-up/follow-up.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/index';
+import { WechatModule } from './wechat/wechat.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import configuration from './config/index';
     AuthModule,
     CustomerModule,
     FollowUpModule,
+    WechatModule,
   ],
   providers: [
     JwtStrategy,
