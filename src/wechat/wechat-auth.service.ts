@@ -66,7 +66,7 @@ export class WechatAuthService {
       };
       this.logger.log(`获取suite_access_token: ${JSON.stringify(data)}`);
       const response = await axios.post(url, data);
-      
+      this.logger.log(`获取suite_access_token响应: ${JSON.stringify(response)}`);
       if (response.data.errcode === 0) {
         const suiteAccessToken = response.data.suite_access_token;
         // 缓存suite_access_token，有效期设为7000秒（2小时减少一些余量）
