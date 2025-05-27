@@ -82,6 +82,7 @@ wechat:
   suiteSecret: '	bmb_Q6wjCWl1cK_-vjNAOVv_o5KtlFnL_X3q1ruDcns'
   token: 'Hfw4xEwg1i'
   encodingAesKey: '3N7UhnSKXORVocYD3Qpee355wOcgLMJESdSM2X9iywN'
+  redirectUri: 'http://czyymf.xyz/app'
 
 # 企业微信配置
 wecom:

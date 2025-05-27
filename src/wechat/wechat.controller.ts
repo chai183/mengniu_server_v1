@@ -366,4 +366,85 @@ export class WechatController {
       this.logger.error('处理事件时发生错误:', error);
     }
   }
+
+  /**
+   * 应用主页入口
+   * 用于生成授权链接
+   */
+  @Get('auth/generate-url')
+  async appHome(
+    @Query('state') state: string,
+  ) {
+    try {
+      this.logger.log('收到应用主页访问请求');
+
+      // 配置回调URL
+      const redirectUri = this.wechatAuthService.redirectUri;
+      this.logger.log(`回调URL: ${redirectUri}`);
+      // 生成授权链接
+      const loginUrl = this.wechatAuthService.generateAppHomeUrl(redirectUri, state);
+      
+      // 返回授权链接
+      this.logger.log(`返回授权链接: ${loginUrl}`);
+      return {
+        success: true,
+        data: {
+          loginUrl,
+        },
+      };
+    } catch (error) {
+      this.logger.error('处理应用主页请求时发生错误:', error);
+      return {
+        success: false,
+        message: '处理应用主页请求失败',
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * 应用主页授权回调
+   * 用于获取用户身份信息
+   */
+  @Get('app/callback')
+  async appCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+  ) {
+    try {
+      this.logger.log(`收到应用主页授权回调: code=${code}, state=${state}`);
+
+      // 获取suite_access_token
+      const suiteAccessToken = await this.wechatAuthService.getSuiteAccessToken();
+      
+      // 获取用户身份信息
+      const userInfo = await this.wechatAuthService.getUserInfo3rd(suiteAccessToken, code);
+      
+      // 获取用户详细信息
+      let userDetail = null;
+      if (userInfo.user_ticket) {
+        userDetail = await this.wechatAuthService.getUserDetailBySuiteToken(
+          suiteAccessToken,
+          userInfo.userid,
+          userInfo.corpid,
+        );
+      }
+
+      // 返回用户信息
+      return {
+        success: true,
+        data: {
+          userInfo,
+          userDetail,
+        },
+      };
+    } catch (error) {
+      this.logger.error('处理应用主页授权回调时发生错误:', error);
+      return {
+        success: false,
+        message: '处理应用主页授权回调失败',
+        error: error.message,
+      };
+    }
+  }
 } 
