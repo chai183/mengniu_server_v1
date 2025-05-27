@@ -5,7 +5,7 @@ import { CacheService } from './cache.service';
 @Module({
   imports: [
     CacheModule.register({
-      ttl: 600, // 默认缓存10分钟
+      ttl: 600 * 1000, // 默认缓存10分钟
       max: 100, // 最多缓存100个项目
       isGlobal: true
     }),

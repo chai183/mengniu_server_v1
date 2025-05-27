@@ -11,7 +11,7 @@ export class WechatController {
   constructor(
     private readonly wechatService: WechatService,
     private readonly wechatAuthService: WechatAuthService,
-  ) {}
+  ) { }
 
   /**
    * 生成企业微信扫码登录URL
@@ -46,11 +46,11 @@ export class WechatController {
   // ) {
   //   try {
   //     this.logger.log(`收到授权回调: code=${code}, state=${state}`);
-      
+
   //     // 这里可以根据code获取用户信息
   //     // 需要先获取suite_access_token，然后获取企业access_token
   //     // 最后通过code获取用户信息
-      
+
   //     // 示例：重定向到前端页面
   //     res.redirect(`/login-success?code=${code}&state=${state}`);
   //   } catch (error) {
@@ -74,13 +74,13 @@ export class WechatController {
 
   //     // 获取suite_access_token
   //     const suiteAccessToken = await this.wechatAuthService.getSuiteAccessToken(suiteTicket);
-      
+
   //     // 获取预授权码
   //     const preAuthCode = await this.wechatAuthService.getPreAuthCode(suiteAccessToken);
-      
+
   //     // 生成授权安装链接
   //     const installUrl = this.wechatAuthService.generateAuthInstallUrl(preAuthCode, state);
-      
+
   //     return {
   //       success: true,
   //       data: {
@@ -109,7 +109,7 @@ export class WechatController {
   // ) {
   //   try {
   //     this.logger.log(`收到企业授权回调: auth_code=${authCode}, state=${state}`);
-      
+
   //     if (!authCode || !suiteTicket) {
   //       return {
   //         success: false,
@@ -119,10 +119,10 @@ export class WechatController {
 
   //     // 获取suite_access_token
   //     const suiteAccessToken = await this.wechatAuthService.getSuiteAccessToken(suiteTicket);
-      
+
   //     // 获取企业永久授权码
   //     const permanentInfo = await this.wechatAuthService.getPermanentCode(suiteAccessToken, authCode);
-      
+
   //     return {
   //       success: true,
   //       data: permanentInfo,
@@ -154,7 +154,7 @@ export class WechatController {
 
     try {
       const message = this.wechatService.validateCallback(msgSignature, timestamp, nonce, echostr);
-      
+
       if (message) {
         this.logger.log('数据回调URL验证成功');
         res.status(HttpStatus.OK).send(message);
@@ -185,7 +185,7 @@ export class WechatController {
 
     try {
       const message = this.wechatService.validateCallback(msgSignature, timestamp, nonce, echostr);
-      
+
       if (message) {
         this.logger.log('指令回调URL验证成功');
         res.status(HttpStatus.OK).send(message);
@@ -383,7 +383,7 @@ export class WechatController {
       this.logger.log(`回调URL: ${redirectUri}`);
       // 生成授权链接
       const loginUrl = this.wechatAuthService.generateAppHomeUrl(redirectUri, state);
-      
+
       // 返回授权链接
       this.logger.log(`返回授权链接: ${loginUrl}`);
       return {
@@ -416,10 +416,10 @@ export class WechatController {
 
       // 获取suite_access_token
       const suiteAccessToken = await this.wechatAuthService.getSuiteAccessToken();
-      
+
       // 获取用户身份信息
       const userInfo = await this.wechatAuthService.getUserInfo3rd(suiteAccessToken, code);
-      
+
       // 获取用户详细信息
       let userDetail = null;
       if (userInfo.user_ticket) {
@@ -447,4 +447,22 @@ export class WechatController {
       };
     }
   }
+
+
+  /**
+   * 获取suite_ticket
+   */
+  @Get('storeSuiteTicket')
+  async storeSuiteTicket() {
+    return this.wechatService.storeSuiteTicket('11', '22', '33');
+  }
+
+  /**
+   * 获取suite_access_token
+   */
+  @Get('getSuiteAccessToken')
+  async getSuiteAccessToken() {
+    return this.wechatService.getSuiteTicket();
+  }
+
 } 

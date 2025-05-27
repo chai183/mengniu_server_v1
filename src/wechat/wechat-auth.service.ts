@@ -70,7 +70,7 @@ export class WechatAuthService {
       if (response.data.errcode === 0) {
         const suiteAccessToken = response.data.suite_access_token;
         // 缓存suite_access_token，有效期设为7000秒（2小时减少一些余量）
-        await this.cacheService.set('suite_access_token', suiteAccessToken, 7000);
+        await this.cacheService.set('suite_access_token', suiteAccessToken, 7000 * 1000);
         this.logger.log('获取并缓存suite_access_token成功');
         return suiteAccessToken;
       } else {
