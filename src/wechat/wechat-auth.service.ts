@@ -66,7 +66,7 @@ export class WechatAuthService {
       };
       this.logger.log(`获取suite_access_token: ${JSON.stringify(data)}`);
       const response = await axios.post(url, data);
-      this.logger.log(`获取suite_access_token响应: ${JSON.stringify(response)}`);
+      this.logger.log(`获取suite_access_token响应: ${JSON.stringify(response.data)}`);
       if (response.data.errcode) {
         throw new Error(`获取suite_access_token失败: ${response.data.errmsg}`);
       }
