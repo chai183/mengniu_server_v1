@@ -64,7 +64,7 @@ export class WechatAuthService {
         suite_secret: this.suiteSecret,
         suite_ticket: suiteTicket,
       };
-
+      this.logger.log(`获取suite_access_token: ${JSON.stringify(data)}`);
       const response = await axios.post(url, data);
       
       if (response.data.errcode === 0) {
