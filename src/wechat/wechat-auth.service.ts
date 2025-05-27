@@ -34,7 +34,7 @@ export class WechatAuthService {
     });
 
     const loginUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?${params.toString()}#wechat_redirect`;
-    
+
     this.logger.log(`生成扫码登录URL: ${loginUrl}`);
     return loginUrl;
   }
@@ -67,15 +67,14 @@ export class WechatAuthService {
       this.logger.log(`获取suite_access_token: ${JSON.stringify(data)}`);
       const response = await axios.post(url, data);
       this.logger.log(`获取suite_access_token响应: ${JSON.stringify(response)}`);
-      if (response.data.errcode === 0) {
-        const suiteAccessToken = response.data.suite_access_token;
-        // 缓存suite_access_token，有效期设为7000秒（2小时减少一些余量）
-        await this.cacheService.set('suite_access_token', suiteAccessToken, 7000 * 1000);
-        this.logger.log('获取并缓存suite_access_token成功');
-        return suiteAccessToken;
-      } else {
+      if (response.data.errcode) {
         throw new Error(`获取suite_access_token失败: ${response.data.errmsg}`);
       }
+      const suiteAccessToken = response.data.suite_access_token;
+      // 缓存suite_access_token，有效期设为7000秒（2小时减少一些余量）
+      await this.cacheService.set('suite_access_token', suiteAccessToken, 7000 * 1000);
+      this.logger.log('获取并缓存suite_access_token成功');
+      return suiteAccessToken;
     } catch (error) {
       this.logger.error('获取suite_access_token时发生错误:', error);
       throw error;
@@ -93,7 +92,7 @@ export class WechatAuthService {
       };
 
       const response = await axios.post(url, data);
-      
+
       if (response.data.errcode === 0) {
         this.logger.log('获取预授权码成功');
         return response.data.pre_auth_code;
@@ -118,7 +117,7 @@ export class WechatAuthService {
     });
 
     const installUrl = `https://open.work.weixin.qq.com/3rdapp/install?${params.toString()}`;
-    
+
     this.logger.log(`生成授权安装链接: ${installUrl}`);
     return installUrl;
   }
@@ -134,7 +133,7 @@ export class WechatAuthService {
       };
 
       const response = await axios.post(url, data);
-      
+
       if (response.data.errcode === 0) {
         this.logger.log('获取企业永久授权码成功');
         return {
@@ -164,7 +163,7 @@ export class WechatAuthService {
       };
 
       const response = await axios.post(url, data);
-      
+
       if (response.data.errcode === 0) {
         this.logger.log('获取企业access_token成功');
         return response.data.access_token;
@@ -183,9 +182,9 @@ export class WechatAuthService {
   async getUserInfo(accessToken: string, code: string): Promise<any> {
     try {
       const url = `https://qyapi.weixin.qq.com/cgi-bin/user/getuserinfo?access_token=${accessToken}&code=${code}`;
-      
+
       const response = await axios.get(url);
-      
+
       if (response.data.errcode === 0) {
         this.logger.log('获取用户信息成功');
         return response.data;
@@ -204,9 +203,9 @@ export class WechatAuthService {
   async getUserDetail(accessToken: string, userId: string): Promise<any> {
     try {
       const url = `https://qyapi.weixin.qq.com/cgi-bin/user/get?access_token=${accessToken}&userid=${userId}`;
-      
+
       const response = await axios.get(url);
-      
+
       if (response.data.errcode === 0) {
         this.logger.log('获取用户详细信息成功');
         return response.data;
@@ -225,9 +224,9 @@ export class WechatAuthService {
   async getUserInfo3rd(suiteAccessToken: string, code: string): Promise<any> {
     try {
       const url = `https://qyapi.weixin.qq.com/cgi-bin/service/getuserinfo3rd?suite_access_token=${suiteAccessToken}&code=${code}`;
-      
+
       const response = await axios.get(url);
-      
+
       if (response.data.errcode === 0) {
         this.logger.log('获取第三方应用访问用户身份信息成功');
         return response.data;
@@ -246,7 +245,7 @@ export class WechatAuthService {
   async getUserDetailBySuiteToken(suiteAccessToken: string, userId: string, corpId: string): Promise<any> {
     try {
       const url = `https://qyapi.weixin.qq.com/cgi-bin/service/getuserdetail3rd?suite_access_token=${suiteAccessToken}`;
-      
+
       const data = {
         user_ticket: userId,
         userid: userId,
@@ -254,7 +253,7 @@ export class WechatAuthService {
       };
 
       const response = await axios.post(url, data);
-      
+
       if (response.data.errcode === 0) {
         this.logger.log('获取第三方应用访问用户敏感信息成功');
         return response.data;
@@ -280,7 +279,7 @@ export class WechatAuthService {
     });
 
     const loginUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?${params.toString()}#wechat_redirect`;
-    
+
     this.logger.log(`生成应用主页授权链接: ${loginUrl}`);
     return loginUrl;
   }
