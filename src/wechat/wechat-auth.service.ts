@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { WechatService } from './wechat.service';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class WechatAuthService {
@@ -9,7 +11,11 @@ export class WechatAuthService {
   private readonly suiteSecret: string;
   private readonly redirectUri: string;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private wechatService: WechatService,
+    private cacheService: CacheService,
+  ) {
     this.suiteId = this.configService.get<string>('wechat.suiteId') || '';
     this.suiteSecret = this.configService.get<string>('wechat.suiteSecret') || '';
     this.redirectUri = this.configService.get<string>('WECHAT_REDIRECT_URI') || '';
@@ -35,9 +41,23 @@ export class WechatAuthService {
 
   /**
    * 获取suite_access_token
+   * 有效期为2小时，会自动缓存
    */
-  async getSuiteAccessToken(suiteTicket: string): Promise<string> {
+  async getSuiteAccessToken(): Promise<string> {
     try {
+      // 先尝试从缓存获取
+      const cachedToken = await this.cacheService.get<string>('suite_access_token');
+      if (cachedToken) {
+        this.logger.log('从缓存获取suite_access_token成功');
+        return cachedToken;
+      }
+
+      // 缓存不存在，重新获取
+      const suiteTicket = await this.wechatService.getSuiteTicket();
+      if (!suiteTicket) {
+        throw new Error('未找到有效的suite_ticket');
+      }
+
       const url = 'https://qyapi.weixin.qq.com/cgi-bin/service/get_suite_token';
       const data = {
         suite_id: this.suiteId,
@@ -48,8 +68,11 @@ export class WechatAuthService {
       const response = await axios.post(url, data);
       
       if (response.data.errcode === 0) {
-        this.logger.log('获取suite_access_token成功');
-        return response.data.suite_access_token;
+        const suiteAccessToken = response.data.suite_access_token;
+        // 缓存suite_access_token，有效期设为7000秒（2小时减少一些余量）
+        await this.cacheService.set('suite_access_token', suiteAccessToken, 7000);
+        this.logger.log('获取并缓存suite_access_token成功');
+        return suiteAccessToken;
       } else {
         throw new Error(`获取suite_access_token失败: ${response.data.errmsg}`);
       }

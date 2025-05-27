@@ -12,6 +12,7 @@ import { FollowUpModule } from './follow-up/follow-up.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/index';
 import { WechatModule } from './wechat/wechat.module';
+import { MemoryCacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { WechatModule } from './wechat/wechat.module';
       }),
       inject: [ConfigService],
     }),
+    MemoryCacheModule,
     UserModule,
     AuthModule,
     CustomerModule,

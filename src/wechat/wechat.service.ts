@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from '@wecom/crypto';
 import * as xml2js from 'xml2js';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class WechatService {
@@ -9,7 +10,10 @@ export class WechatService {
   private readonly token: string;
   private readonly encodingAESKey: string;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private cacheService: CacheService,
+  ) {
     // 从配置中获取企业微信应用的Token和EncodingAESKey
     this.token = this.configService.get<string>('wechat.token') || '';
     this.encodingAESKey = this.configService.get<string>('wechat.encodingAesKey') || '';
@@ -104,14 +108,17 @@ export class WechatService {
   }
 
   /**
-   * 存储suite_ticket（示例实现）
+   * 存储suite_ticket
    */
   private async storeSuiteTicket(suiteId: string, suiteTicket: string, timestamp: string): Promise<void> {
-    // 这里应该实现实际的存储逻辑，比如存储到Redis或数据库
-    this.logger.log(`存储suite_ticket - SuiteId: ${suiteId}, Ticket: ${suiteTicket}, Timestamp: ${timestamp}`);
-    
-    // 示例：可以存储到内存中（生产环境建议使用Redis）
-    // await this.cacheService.set(`suite_ticket:${suiteId}`, suiteTicket, 600); // 10分钟过期
+    try {
+      // 存储到缓存中，设置10分钟过期
+      await this.cacheService.set(`suite_ticket`, suiteTicket, 600);
+      this.logger.log(`成功缓存suite_ticket - SuiteId: ${suiteId}, Ticket: ${suiteTicket}, Timestamp: ${timestamp}`);
+    } catch (error) {
+      this.logger.error('存储suite_ticket时发生错误:', error);
+      throw error;
+    }
   }
 
   /**
@@ -139,6 +146,22 @@ export class WechatService {
       }
     } catch (error) {
       this.logger.error('处理授权变更事件时发生错误:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取suite_ticket
+   */
+  async getSuiteTicket(): Promise<string | null> {
+    try {
+      const ticket = await this.cacheService.get<string>('suite_ticket');
+      if (!ticket) {
+        this.logger.warn('缓存中未找到suite_ticket');
+      }
+      return ticket;
+    } catch (error) {
+      this.logger.error('获取suite_ticket时发生错误:', error);
       throw error;
     }
   }

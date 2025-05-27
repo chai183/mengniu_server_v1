@@ -16,126 +16,126 @@ export class WechatController {
   /**
    * 生成企业微信扫码登录URL
    */
-  @Get('auth/qrcode-url')
-  async getQRCodeLoginUrl(@Query('state') state?: string) {
-    try {
-      const loginUrl = this.wechatAuthService.generateQRCodeLoginUrl(state);
-      return {
-        success: true,
-        data: {
-          loginUrl,
-        },
-      };
-    } catch (error) {
-      this.logger.error('生成扫码登录URL时发生错误:', error);
-      return {
-        success: false,
-        message: '生成登录URL失败',
-      };
-    }
-  }
+  // @Get('auth/qrcode-url')
+  // async getQRCodeLoginUrl(@Query('state') state?: string) {
+  //   try {
+  //     const loginUrl = this.wechatAuthService.generateQRCodeLoginUrl(state);
+  //     return {
+  //       success: true,
+  //       data: {
+  //         loginUrl,
+  //       },
+  //     };
+  //   } catch (error) {
+  //     this.logger.error('生成扫码登录URL时发生错误:', error);
+  //     return {
+  //       success: false,
+  //       message: '生成登录URL失败',
+  //     };
+  //   }
+  // }
 
   /**
    * 处理授权回调
    */
-  @Get('auth/callback')
-  async handleAuthCallback(
-    @Query('code') code: string,
-    @Query('state') state: string,
-    @Res() res: Response,
-  ) {
-    try {
-      this.logger.log(`收到授权回调: code=${code}, state=${state}`);
+  // @Get('auth/callback')
+  // async handleAuthCallback(
+  //   @Query('code') code: string,
+  //   @Query('state') state: string,
+  //   @Res() res: Response,
+  // ) {
+  //   try {
+  //     this.logger.log(`收到授权回调: code=${code}, state=${state}`);
       
-      // 这里可以根据code获取用户信息
-      // 需要先获取suite_access_token，然后获取企业access_token
-      // 最后通过code获取用户信息
+  //     // 这里可以根据code获取用户信息
+  //     // 需要先获取suite_access_token，然后获取企业access_token
+  //     // 最后通过code获取用户信息
       
-      // 示例：重定向到前端页面
-      res.redirect(`/login-success?code=${code}&state=${state}`);
-    } catch (error) {
-      this.logger.error('处理授权回调时发生错误:', error);
-      res.redirect('/login-error');
-    }
-  }
+  //     // 示例：重定向到前端页面
+  //     res.redirect(`/login-success?code=${code}&state=${state}`);
+  //   } catch (error) {
+  //     this.logger.error('处理授权回调时发生错误:', error);
+  //     res.redirect('/login-error');
+  //   }
+  // }
 
   /**
    * 获取授权安装链接
    */
-  @Get('auth/install-url')
-  async getInstallUrl(@Query('suite_ticket') suiteTicket: string, @Query('state') state?: string) {
-    try {
-      if (!suiteTicket) {
-        return {
-          success: false,
-          message: 'suite_ticket参数必填',
-        };
-      }
+  // @Get('auth/install-url')
+  // async getInstallUrl(@Query('suite_ticket') suiteTicket: string, @Query('state') state?: string) {
+  //   try {
+  //     if (!suiteTicket) {
+  //       return {
+  //         success: false,
+  //         message: 'suite_ticket参数必填',
+  //       };
+  //     }
 
-      // 获取suite_access_token
-      const suiteAccessToken = await this.wechatAuthService.getSuiteAccessToken(suiteTicket);
+  //     // 获取suite_access_token
+  //     const suiteAccessToken = await this.wechatAuthService.getSuiteAccessToken(suiteTicket);
       
-      // 获取预授权码
-      const preAuthCode = await this.wechatAuthService.getPreAuthCode(suiteAccessToken);
+  //     // 获取预授权码
+  //     const preAuthCode = await this.wechatAuthService.getPreAuthCode(suiteAccessToken);
       
-      // 生成授权安装链接
-      const installUrl = this.wechatAuthService.generateAuthInstallUrl(preAuthCode, state);
+  //     // 生成授权安装链接
+  //     const installUrl = this.wechatAuthService.generateAuthInstallUrl(preAuthCode, state);
       
-      return {
-        success: true,
-        data: {
-          installUrl,
-          preAuthCode,
-        },
-      };
-    } catch (error) {
-      this.logger.error('生成授权安装链接时发生错误:', error);
-      return {
-        success: false,
-        message: '生成授权链接失败',
-        error: error.message,
-      };
-    }
-  }
+  //     return {
+  //       success: true,
+  //       data: {
+  //         installUrl,
+  //         preAuthCode,
+  //       },
+  //     };
+  //   } catch (error) {
+  //     this.logger.error('生成授权安装链接时发生错误:', error);
+  //     return {
+  //       success: false,
+  //       message: '生成授权链接失败',
+  //       error: error.message,
+  //     };
+  //   }
+  // }
 
   /**
    * 处理企业授权回调
    */
-  @Get('auth/install-callback')
-  async handleInstallCallback(
-    @Query('auth_code') authCode: string,
-    @Query('state') state: string,
-    @Query('suite_ticket') suiteTicket: string,
-  ) {
-    try {
-      this.logger.log(`收到企业授权回调: auth_code=${authCode}, state=${state}`);
+  // @Get('auth/install-callback')
+  // async handleInstallCallback(
+  //   @Query('auth_code') authCode: string,
+  //   @Query('state') state: string,
+  //   @Query('suite_ticket') suiteTicket: string,
+  // ) {
+  //   try {
+  //     this.logger.log(`收到企业授权回调: auth_code=${authCode}, state=${state}`);
       
-      if (!authCode || !suiteTicket) {
-        return {
-          success: false,
-          message: '缺少必要参数',
-        };
-      }
+  //     if (!authCode || !suiteTicket) {
+  //       return {
+  //         success: false,
+  //         message: '缺少必要参数',
+  //       };
+  //     }
 
-      // 获取suite_access_token
-      const suiteAccessToken = await this.wechatAuthService.getSuiteAccessToken(suiteTicket);
+  //     // 获取suite_access_token
+  //     const suiteAccessToken = await this.wechatAuthService.getSuiteAccessToken(suiteTicket);
       
-      // 获取企业永久授权码
-      const permanentInfo = await this.wechatAuthService.getPermanentCode(suiteAccessToken, authCode);
+  //     // 获取企业永久授权码
+  //     const permanentInfo = await this.wechatAuthService.getPermanentCode(suiteAccessToken, authCode);
       
-      return {
-        success: true,
-        data: permanentInfo,
-      };
-    } catch (error) {
-      this.logger.error('处理企业授权回调时发生错误:', error);
-      return {
-        success: false,
-        message: '处理授权回调失败',
-        error: error.message,
-      };
-    }
-  }
+  //     return {
+  //       success: true,
+  //       data: permanentInfo,
+  //     };
+  //   } catch (error) {
+  //     this.logger.error('处理企业授权回调时发生错误:', error);
+  //     return {
+  //       success: false,
+  //       message: '处理授权回调失败',
+  //       error: error.message,
+  //     };
+  //   }
+  // }
 
   /**
    * 数据回调URL验证 - GET请求
