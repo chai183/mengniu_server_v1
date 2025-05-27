@@ -113,7 +113,7 @@ export class WechatService {
   async storeSuiteTicket(suiteId: string, suiteTicket: string, timestamp: string): Promise<void> {
     try {
       // 存储到缓存中，设置10分钟过期
-      await this.cacheService.set(`suite_ticket`, suiteTicket, 600 * 1000);
+      await this.cacheService.set(`suite_ticket`, suiteTicket, 1700 * 1000);
       this.logger.log(`成功缓存suite_ticket - SuiteId: ${suiteId}, Ticket: ${suiteTicket}, Timestamp: ${timestamp}`);
     } catch (error) {
       this.logger.error('存储suite_ticket时发生错误:', error);
