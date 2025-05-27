@@ -242,14 +242,12 @@ export class WechatAuthService {
   /**
    * 获取第三方应用访问用户敏感信息
    */
-  async getUserDetailBySuiteToken(suiteAccessToken: string, userId: string, corpId: string): Promise<any> {
+  async getUserDetailBySuiteToken(suiteAccessToken: string, user_ticket: string): Promise<any> {
     try {
       const url = `https://qyapi.weixin.qq.com/cgi-bin/service/getuserdetail3rd?suite_access_token=${suiteAccessToken}`;
 
       const data = {
-        user_ticket: userId,
-        userid: userId,
-        corpid: corpId
+        user_ticket: user_ticket,
       };
 
       const response = await axios.post(url, data);

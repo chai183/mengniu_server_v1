@@ -425,8 +425,7 @@ export class WechatController {
       if (userInfo.user_ticket) {
         userDetail = await this.wechatAuthService.getUserDetailBySuiteToken(
           suiteAccessToken,
-          userInfo.userid,
-          userInfo.corpid,
+          userInfo.user_ticket
         );
       }
 
