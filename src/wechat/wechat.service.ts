@@ -188,16 +188,16 @@ export class WechatService {
         { auth_code: authCode }
       );
       console.log(data);
-      const { permanent_code, auth_corp_info } = data;
+      const { permanent_code, auth_corp_info, auth_info } = data;
 
       if (permanent_code) {
         this.logger.log('获取永久授权码成功', permanent_code);
         // 将企业信息与永久授权码保存到缓存
         await this.savePermanentCode(auth_corp_info.corpid, permanent_code);
-        
+
         // 保存应用ID
-        if (auth_corp_info.auth_info && auth_corp_info.auth_info.agent && auth_corp_info.auth_info.agent.length > 0) {
-          const agentId = auth_corp_info.auth_info.agent[0].agentid;
+        if (auth_info.agent && auth_info.agent.length > 0) {
+          const agentId = auth_info.agent[0].agentid;
           await this.saveAgentId(auth_corp_info.corpid, agentId);
         }
         return permanent_code;
