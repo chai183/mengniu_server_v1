@@ -38,4 +38,25 @@ export class CacheController {
       };
     }
   }
+
+  @Get('all')
+  @ApiOperation({ summary: '获取所有缓存' })
+  @ApiResponse({ status: 200, description: '成功获取所有缓存' })
+  async getAllCache() {
+    try {
+      const cacheData = await this.cacheService.getAll();
+      return {
+        code: 200,
+        message: '获取成功',
+        data: cacheData
+      };
+    } catch (error) {
+      this.logger.error(`获取所有缓存失败: ${error.message}`);
+      return {
+        code: 500,
+        message: '获取所有缓存失败',
+        error: error.message
+      };
+    }
+  }
 } 
