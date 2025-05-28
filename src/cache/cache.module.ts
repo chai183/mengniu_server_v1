@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { CacheService } from './cache.service';
+import { CacheController } from './cache.controller';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { CacheService } from './cache.service';
       isGlobal: true
     }),
   ],
+  controllers: [CacheController],
   providers: [CacheService],
   exports: [CacheService],
 })
