@@ -39,22 +39,30 @@ export class CacheController {
     }
   }
 
-  @Get('all')
-  @ApiOperation({ summary: '获取所有缓存' })
-  @ApiResponse({ status: 200, description: '成功获取所有缓存' })
-  async getAllCache() {
+  @Get('set')
+  @ApiOperation({ summary: '设置缓存值' })
+  @ApiQuery({ name: 'key', description: '缓存键', required: true })
+  @ApiQuery({ name: 'value', description: '缓存值', required: true })
+  @ApiQuery({ name: 'ttl', description: '过期时间（秒）', required: false })
+  @ApiResponse({ status: 200, description: '成功设置缓存' })
+  @ApiResponse({ status: 500, description: '设置缓存失败' })
+  async setCache(
+    @Query('key') key: string,
+    @Query('value') value: string,
+    @Query('ttl') ttl?: number
+  ) {
     try {
-      const cacheData = await this.cacheService.getAll();
+      await this.cacheService.set(key, value, ttl);
       return {
         code: 200,
-        message: '获取成功',
-        data: cacheData
+        message: '设置成功',
+        data: null
       };
     } catch (error) {
-      this.logger.error(`获取所有缓存失败: ${error.message}`);
+      this.logger.error(`设置缓存失败: ${error.message}`);
       return {
         code: 500,
-        message: '获取所有缓存失败',
+        message: '设置缓存失败',
         error: error.message
       };
     }

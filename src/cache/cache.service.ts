@@ -9,32 +9,7 @@ export class CacheService {
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
 
   /**
-   * 获取所有缓存
-   * @returns 所有缓存的键值对
-   */
-  async getAll(): Promise<Record<string, any>> {
-    try {
-      // 注意：由于 cache-manager 的限制，我们需要通过其他方式获取所有缓存
-      // 这里我们使用一个特殊的键来存储所有缓存的键列表
-      const keys = await this.cacheManager.get<string[]>('__cache_keys__') || [];
-      const result: Record<string, any> = {};
-      
-      for (const key of keys) {
-        const value = await this.cacheManager.get(key);
-        if (value !== null && value !== undefined) {
-          result[key] = value;
-        }
-      }
-      
-      return result;
-    } catch (error) {
-      this.logger.error('Failed to get all cache:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * 设置缓存并记录键
+   * 设置缓存
    * @param key 缓存键
    * @param value 缓存值
    * @param ttl 过期时间（秒）
@@ -42,12 +17,6 @@ export class CacheService {
   async set(key: string, value: any, ttl?: number): Promise<void> {
     try {
       await this.cacheManager.set(key, value, ttl);
-      // 更新键列表
-      const keys = await this.cacheManager.get<string[]>('__cache_keys__') || [];
-      if (!keys.includes(key)) {
-        keys.push(key);
-        await this.cacheManager.set('__cache_keys__', keys);
-      }
       this.logger.debug(`Cache set: ${key}`);
     } catch (error) {
       this.logger.error(`Failed to set cache for key ${key}:`, error);
@@ -72,16 +41,12 @@ export class CacheService {
   }
 
   /**
-   * 删除缓存并更新键列表
+   * 删除缓存
    * @param key 缓存键
    */
   async del(key: string): Promise<void> {
     try {
       await this.cacheManager.del(key);
-      // 更新键列表
-      const keys = await this.cacheManager.get<string[]>('__cache_keys__') || [];
-      const newKeys = keys.filter(k => k !== key);
-      await this.cacheManager.set('__cache_keys__', newKeys);
       this.logger.debug(`Cache deleted: ${key}`);
     } catch (error) {
       this.logger.error(`Failed to delete cache for key ${key}:`, error);

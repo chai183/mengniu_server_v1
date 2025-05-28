@@ -177,19 +177,19 @@ export class WechatService {
    */
   async getPermanentCode(authCode: string): Promise<string | null> {
     try {
-      // 从缓存中获取 suite_access_token
+       //从缓存中获取 suite_access_token
       const suiteAccessToken = await this.cacheService.get<string>('suite_access_token');
       if (!suiteAccessToken) {
         this.logger.error('未找到suite_access_token');
         return null;
       }
 
-      // 获取永久授权码
+      //  获取永久授权码
       const { data } = await axios.post(
         `https://qyapi.weixin.qq.com/cgi-bin/service/get_permanent_code?suite_access_token=${suiteAccessToken}`,
         { auth_code: authCode }
       );
-      
+
       const { permanent_code, auth_corp_info, auth_info } = data;
       const { corpid } = auth_corp_info;
       const body = {
@@ -203,11 +203,10 @@ export class WechatService {
 
         const corp = await this.corpService.findByCorpId(corpid);
         if (corp) {
-          this.corpService.update(corp.id, body);
+          await this.corpService.update(corp.id, body);
         } else {
-          this.corpService.create(body);
+          await this.corpService.create(body);
         }
-
         return permanent_code;
       } else {
         this.logger.error('获取永久授权码失败', data);
@@ -241,7 +240,7 @@ export class WechatService {
    * @param corpId 企业ID
    * @returns 应用ID
    */
-  async getAgentId(corpId: string): Promise<string | null> {
+  async getAgentId(corpId: string): Promise<number | null> {
     try {
       const corp = await this.corpService.findByCorpId(corpId);
       if (!corp) {

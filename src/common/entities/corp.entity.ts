@@ -14,5 +14,5 @@ export class Corp extends BaseEntity {
 
   @Column()
   @ApiProperty({ description: '授权方应用id' })
-  agentid: string;
+  agentid: number;
 } 
