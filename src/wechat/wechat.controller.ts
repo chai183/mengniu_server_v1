@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Req, Res, Logger, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Query, Req, Res, Logger, HttpStatus, Body } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { WechatService } from './wechat.service';
 import { WechatAuthService } from './wechat-auth.service';
@@ -462,6 +462,45 @@ export class WechatController {
   @Get('getSuiteAccessToken')
   async getSuiteAccessToken() {
     return this.wechatService.getSuiteTicket();
+  }
+
+  /**
+   * 向企业微信成员发送消息
+   */
+  @Post('message/send')
+  async sendMessage(
+    @Body() body: { corpId: string; userId: string; content: string },
+  ) {
+    try {
+      const { corpId, userId, content } = body;
+      if (!corpId || !userId || !content) {
+        return {
+          success: false,
+          message: '缺少必要参数',
+        };
+      }
+
+      const result = await this.wechatService.sendMessage(corpId, userId, content);
+
+      if (result) {
+        return {
+          success: true,
+          message: '消息发送成功',
+        };
+      } else {
+        return {
+          success: false,
+          message: '消息发送失败',
+        };
+      }
+    } catch (error) {
+      this.logger.error('发送消息时发生错误:', error);
+      return {
+        success: false,
+        message: '发送消息失败',
+        error: error.message,
+      };
+    }
   }
 
 } 
