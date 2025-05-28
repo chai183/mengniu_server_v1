@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { User, Customer, FollowUp } from './common/entities';
+import { User, Customer, FollowUp, Corp } from './common/entities';
 import { AuthModule } from './auth/auth.module';
 import { JwtStrategy } from './common/strategies/jwt.strategy';
 import { JwtModule } from '@nestjs/jwt';
@@ -13,6 +13,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from './config/index';
 import { WechatModule } from './wechat/wechat.module';
 import { MemoryCacheModule } from './cache/cache.module';
+import { CorpModule } from './corp/corp.module';
 
 @Module({
   imports: [
@@ -43,7 +44,7 @@ import { MemoryCacheModule } from './cache/cache.module';
       username: process.env.DB_USERNAME ?? 'root',
       password: process.env.DB_PASSWORD ?? '123456',
       database: process.env.DB_DATABASE ?? 'db_template',
-      entities: [User, Customer, FollowUp],
+      entities: [User, Customer, FollowUp, Corp],
       synchronize: true,
     }),
     JwtModule.registerAsync({
@@ -61,6 +62,7 @@ import { MemoryCacheModule } from './cache/cache.module';
     CustomerModule,
     FollowUpModule,
     WechatModule,
+    CorpModule,
   ],
   providers: [
     JwtStrategy,

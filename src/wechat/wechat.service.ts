@@ -4,6 +4,7 @@ import * as crypto from '@wecom/crypto';
 import * as xml2js from 'xml2js';
 import { CacheService } from '../cache/cache.service';
 import axios from 'axios';
+import { CorpService } from '../corp/corp.service';
 
 @Injectable()
 export class WechatService {
@@ -14,6 +15,7 @@ export class WechatService {
   constructor(
     private configService: ConfigService,
     private cacheService: CacheService,
+    private corpService: CorpService,
   ) {
     // 从配置中获取企业微信应用的Token和EncodingAESKey
     this.token = this.configService.get<string>('wechat.token') || '';
@@ -187,19 +189,25 @@ export class WechatService {
         `https://qyapi.weixin.qq.com/cgi-bin/service/get_permanent_code?suite_access_token=${suiteAccessToken}`,
         { auth_code: authCode }
       );
-      console.log(data);
+      
       const { permanent_code, auth_corp_info, auth_info } = data;
+      const { corpid } = auth_corp_info;
+      const body = {
+        corpid,
+        permanentCode: permanent_code,
+        agentid: auth_info.agent[0].agentid,
+      }
 
       if (permanent_code) {
         this.logger.log('获取永久授权码成功', permanent_code);
-        // 将企业信息与永久授权码保存到缓存
-        await this.savePermanentCode(auth_corp_info.corpid, permanent_code);
 
-        // 保存应用ID
-        if (auth_info.agent && auth_info.agent.length > 0) {
-          const agentId = auth_info.agent[0].agentid;
-          await this.saveAgentId(auth_corp_info.corpid, agentId);
+        const corp = await this.corpService.findByCorpId(corpid);
+        if (corp) {
+          this.corpService.update(corp.id, body);
+        } else {
+          this.corpService.create(body);
         }
+
         return permanent_code;
       } else {
         this.logger.error('获取永久授权码失败', data);
@@ -212,47 +220,18 @@ export class WechatService {
   }
 
   /**
-   * 保存永久授权码
-   */
-  async savePermanentCode(corpId: string, permanentCode: string): Promise<void> {
-    try {
-      // 永久授权码不设置过期时间
-      await this.cacheService.set(`permanent_code:${corpId}`, permanentCode);
-      this.logger.log(`成功保存永久授权码 - CorpId: ${corpId}`);
-    } catch (error) {
-      this.logger.error('保存永久授权码时发生错误:', error);
-      throw error;
-    }
-  }
-
-  /**
    * 获取企业永久授权码
    */
   async getCorpPermanentCode(corpId: string): Promise<string | null> {
     try {
-      const permanentCode = await this.cacheService.get<string>(`permanent_code:${corpId}`);
-      if (!permanentCode) {
+      const corp = await this.corpService.findByCorpId(corpId);
+      if (!corp) {
         this.logger.warn(`未找到企业(${corpId})的永久授权码`);
+        return null;
       }
-      return permanentCode;
+      return corp.permanentCode;
     } catch (error) {
       this.logger.error('获取企业永久授权码时发生错误:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * 保存应用ID
-   * @param corpId 企业ID
-   * @param agentId 应用ID
-   */
-  async saveAgentId(corpId: string, agentId: string): Promise<void> {
-    try {
-      // 应用ID不设置过期时间
-      await this.cacheService.set(`agent_id:${corpId}`, agentId);
-      this.logger.log(`成功保存应用ID - CorpId: ${corpId}, AgentId: ${agentId}`);
-    } catch (error) {
-      this.logger.error('保存应用ID时发生错误:', error);
       throw error;
     }
   }
@@ -264,44 +243,14 @@ export class WechatService {
    */
   async getAgentId(corpId: string): Promise<string | null> {
     try {
-      const agentId = await this.cacheService.get<string>(`agent_id:${corpId}`);
-      if (!agentId) {
+      const corp = await this.corpService.findByCorpId(corpId);
+      if (!corp) {
         this.logger.warn(`未找到企业(${corpId})的应用ID`);
+        return null;
       }
-      return agentId;
+      return corp.agentid;
     } catch (error) {
       this.logger.error('获取企业应用ID时发生错误:', error);
-      throw error;
-    }
-  }
-
-
-  /**
-   * 获取临时授权码
-   */
-  async getAuthCode(): Promise<string | null> {
-    try {
-      const authCode = await this.cacheService.get<string>('auth_code');
-      if (!authCode) {
-        this.logger.warn('未找到临时授权码');
-      }
-      return authCode;
-    } catch (error) {
-      this.logger.error('获取临时授权码时发生错误:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * 保存临时授权码
-   */
-  async saveAuthCode(authCode: string): Promise<void> {
-    try {
-      // 临时授权码有效期为10分钟
-      await this.cacheService.set('auth_code', authCode, 600);
-      this.logger.log('成功保存临时授权码');
-    } catch (error) {
-      this.logger.error('保存临时授权码时发生错误:', error);
       throw error;
     }
   }
