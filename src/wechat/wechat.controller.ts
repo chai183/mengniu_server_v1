@@ -503,4 +503,26 @@ export class WechatController {
     }
   }
 
+
+  /**
+   * 获取jssdk配置
+   */
+  @Get('getConfigSignature')
+  async getConfigSignature(
+    @Query('url') url: string,
+    @Query('corpId') corpId: string,
+  ) {
+    return this.wechatService.getJssdkConfig(corpId, url);
+  }
+
+  /**
+   * 获取jssdk配置
+   */
+  @Get('getAgentConfigSignature')
+  async getAgentConfigSignature(
+    @Query('url') url: string,
+    @Query('corpId') corpId: string,
+  ) {
+    return this.wechatService.getJssdkConfig(corpId, url);
+  }
 } 

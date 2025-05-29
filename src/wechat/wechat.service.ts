@@ -5,6 +5,7 @@ import * as xml2js from 'xml2js';
 import { CacheService } from '../cache/cache.service';
 import axios from 'axios';
 import { CorpService } from '../corp/corp.service';
+import { createHash } from 'crypto';
 
 @Injectable()
 export class WechatService {
@@ -382,6 +383,155 @@ export class WechatService {
     } catch (error) {
       this.logger.error('发送消息时发生错误:', error);
       return false;
+    }
+  }
+
+  
+
+  /**
+   * 从企业微信服务器获取 jsapi_ticket
+   * @param corpId 企业ID
+   * @returns jsapi_ticket 和过期时间
+   */
+  private async fetchJsapiTicket(corpId: string): Promise<{ ticket: string; expiresIn: number } | null> {
+    try {
+      this.logger.log(`获取企业(${corpId})的jsapi_ticket`);
+      // 获取企业访问令牌
+      const accessToken = await this.getCorpAccessToken(corpId);
+      if (!accessToken) {
+        this.logger.error(`获取企业(${corpId})访问令牌失败`);
+        return null;
+      }
+
+      // 请求jsapi_ticket
+      const { data } = await axios.get(
+        `https://qyapi.weixin.qq.com/cgi-bin/get_jsapi_ticket?access_token=${accessToken}`
+      );
+
+      if (data.errcode) {
+        this.logger.error(`获取jsapi_ticket失败: ${data.errmsg}`);
+        return null;
+      }
+      this.logger.log(`获取jsapi_ticket成功: ${data.ticket}`);
+      return {
+        ticket: data.ticket,
+        expiresIn: data.expires_in
+      };
+    } catch (error) {
+      this.logger.error('获取jsapi_ticket时发生错误:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 保存jsapi_ticket到缓存
+   * @param corpId 企业ID
+   * @param ticket jsapi_ticket
+   * @param expiresIn 过期时间（秒）
+   */
+  private async saveJsapiTicket(corpId: string, ticket: string, expiresIn: number): Promise<void> {
+    try {
+      await this.cacheService.set(`jsapi_ticket:${corpId}`, ticket, expiresIn * 1000);
+      this.logger.log(`成功保存企业(${corpId})的jsapi_ticket`);
+    } catch (error) {
+      this.logger.error(`保存企业(${corpId})的jsapi_ticket时发生错误:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取企业jsapi_ticket
+   * @param corpId 企业ID
+   * @returns jsapi_ticket
+   */
+  async getJsapiTicket(corpId: string): Promise<string | null> {
+    try {
+      // 先从缓存中获取
+      const cachedTicket = await this.cacheService.get<string>(`jsapi_ticket:${corpId}`);
+      if (cachedTicket) {
+        this.logger.log(`从缓存中获取企业(${corpId})的jsapi_ticket: ${cachedTicket}`);
+        return cachedTicket;
+      }
+
+      // 缓存中没有，重新获取
+      const result = await this.fetchJsapiTicket(corpId);
+      if (!result) {
+        this.logger.error(`获取企业(${corpId})的jsapi_ticket失败`);
+        return null;
+      }
+
+      // 保存到缓存
+      await this.saveJsapiTicket(corpId, result.ticket, result.expiresIn);
+      this.logger.log(`成功保存企业(${corpId})的jsapi_ticket: ${result.ticket}`);
+      return result.ticket;
+    } catch (error) {
+      this.logger.error(`获取企业(${corpId})的jsapi_ticket时发生错误:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * 生成随机字符串
+   * @param length 字符串长度，默认16位
+   * @returns 随机字符串
+   */
+  private generateNonceStr(length: number = 16): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let nonceStr = '';
+    for (let i = 0; i < length; i++) {
+      nonceStr += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return nonceStr;
+  }
+
+  /**
+   * 生成JS-SDK配置签名
+   * @param corpId 企业ID
+   * @param url 当前网页的URL，不包含#及其后面部分
+   * @returns 签名配置信息
+   */
+  async getJssdkConfig(corpId: string, url: string): Promise<{
+    signature: string;
+    nonceStr: string;
+    timestamp: number;
+    url: string;
+  } | null> {
+    try {
+      // 获取jsapi_ticket
+      const jsapiTicket = await this.getJsapiTicket(corpId);
+      if (!jsapiTicket) {
+        this.logger.error(`获取企业(${corpId})的jsapi_ticket失败`);
+        return null;
+      }
+
+      // 生成签名所需参数
+      const nonceStr = this.generateNonceStr();
+      const timestamp = Math.floor(Date.now() / 1000);
+
+      // 按照字典序排序并拼接参数
+      const str = [
+        `jsapi_ticket=${jsapiTicket}`,
+        `noncestr=${nonceStr}`,
+        `timestamp=${timestamp}`,
+        `url=${url}`
+      ].join('&');
+
+      // 使用SHA-1进行签名
+      const signature = createHash('sha1').update(str).digest('hex');
+
+      this.logger.log(`生成JS-SDK签名成功 - 企业ID: ${corpId}, URL: ${url}`);
+      this.logger.log(`签名字符串: ${str}`);
+      this.logger.log(`签名结果: ${signature}`);
+
+      return {
+        signature,
+        nonceStr,
+        timestamp,
+        url
+      };
+    } catch (error) {
+      this.logger.error(`生成JS-SDK签名时发生错误:`, error);
+      return null;
     }
   }
 } 
