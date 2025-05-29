@@ -178,7 +178,7 @@ export class WechatService {
    */
   async getPermanentCode(authCode: string): Promise<string | null> {
     try {
-       //从缓存中获取 suite_access_token
+      //从缓存中获取 suite_access_token
       const suiteAccessToken = await this.cacheService.get<string>('suite_access_token');
       if (!suiteAccessToken) {
         this.logger.error('未找到suite_access_token');
@@ -386,7 +386,7 @@ export class WechatService {
     }
   }
 
-  
+
 
   /**
    * 从企业微信服务器获取 jsapi_ticket
@@ -531,6 +531,139 @@ export class WechatService {
       };
     } catch (error) {
       this.logger.error(`生成JS-SDK签名时发生错误:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * 从企业微信服务器获取应用 jsapi_ticket
+   * @param corpId 企业ID
+   * @returns jsapi_ticket 和过期时间
+   */
+  private async fetchAgentJsapiTicket(corpId: string): Promise<{ ticket: string; expiresIn: number } | null> {
+    try {
+      this.logger.log(`获取企业(${corpId})的应用jsapi_ticket`);
+      // 获取企业访问令牌
+      const accessToken = await this.getCorpAccessToken(corpId);
+      if (!accessToken) {
+        this.logger.error(`获取企业(${corpId})访问令牌失败`);
+        return null;
+      }
+
+      // 请求应用jsapi_ticket
+      const { data } = await axios.get(
+        `https://qyapi.weixin.qq.com/cgi-bin/ticket/get?access_token=${accessToken}&type=agent_config`
+      );
+
+      if (data.errcode) {
+        this.logger.error(`获取应用jsapi_ticket失败: ${data.errmsg}`);
+        return null;
+      }
+
+      this.logger.log(`获取应用jsapi_ticket成功: ${data.ticket}`);
+      return {
+        ticket: data.ticket,
+        expiresIn: data.expires_in
+      };
+    } catch (error) {
+      this.logger.error('获取应用jsapi_ticket时发生错误:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 保存应用jsapi_ticket到缓存
+   * @param corpId 企业ID
+   * @param ticket jsapi_ticket
+   * @param expiresIn 过期时间（秒）
+   */
+  private async saveAgentJsapiTicket(corpId: string, ticket: string, expiresIn: number): Promise<void> {
+    try {
+      await this.cacheService.set(`agent_jsapi_ticket:${corpId}`, ticket, expiresIn * 1000);
+      this.logger.log(`成功保存企业(${corpId})的应用jsapi_ticket: ${ticket}`);
+    } catch (error) {
+      this.logger.error(`保存企业(${corpId})的应用jsapi_ticket时发生错误:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取企业应用jsapi_ticket
+   * @param corpId 企业ID
+   * @returns jsapi_ticket
+   */
+  async getAgentJsapiTicket(corpId: string): Promise<string | null> {
+    try {
+      // 先从缓存中获取
+      const cachedTicket = await this.cacheService.get<string>(`agent_jsapi_ticket:${corpId}`);
+      if (cachedTicket) {
+        this.logger.log(`从缓存中获取企业(${corpId})的应用jsapi_ticket: ${cachedTicket}`);
+        return cachedTicket;
+      }
+
+      // 缓存中没有，重新获取
+      const result = await this.fetchAgentJsapiTicket(corpId);
+      if (!result) {
+        this.logger.error(`获取企业(${corpId})的应用jsapi_ticket失败`);
+        return null;
+      }
+
+      // 保存到缓存
+      await this.saveAgentJsapiTicket(corpId, result.ticket, result.expiresIn);
+      return result.ticket;
+    } catch (error) {
+      this.logger.error(`获取企业(${corpId})的应用jsapi_ticket时发生错误:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * 生成应用JS-SDK配置签名
+   * @param corpId 企业ID
+   * @param url 当前网页的URL，不包含#及其后面部分
+   * @returns 签名配置信息
+   */
+  async getAgentJssdkConfig(corpId: string, url: string): Promise<{
+    signature: string;
+    nonceStr: string;
+    timestamp: number;
+    url: string;
+  } | null> {
+    try {
+      // 获取应用jsapi_ticket
+      const jsapiTicket = await this.getAgentJsapiTicket(corpId);
+      if (!jsapiTicket) {
+        this.logger.error(`获取企业(${corpId})的应用jsapi_ticket失败`);
+        return null;
+      }
+
+      // 生成签名所需参数
+      const nonceStr = this.generateNonceStr();
+      const timestamp = Math.floor(Date.now() / 1000);
+
+      // 按照字典序排序并拼接参数
+      const str = [
+        `jsapi_ticket=${jsapiTicket}`,
+        `noncestr=${nonceStr}`,
+        `timestamp=${timestamp}`,
+        `url=${url}`
+      ].join('&');
+
+      // 使用SHA-1进行签名
+      const signature = createHash('sha1').update(str).digest('hex');
+
+      this.logger.log(`生成应用JS-SDK签名成功 - 企业ID: ${corpId}, URL: ${url}`);
+      this.logger.log(`签名字符串: ${str}`);
+      this.logger.log(`签名结果: ${signature}`);
+
+      return {
+        signature,
+        nonceStr,
+        timestamp,
+        url
+      };
+    } catch (error) {
+      this.logger.error(`生成应用JS-SDK签名时发生错误:`, error);
       return null;
     }
   }

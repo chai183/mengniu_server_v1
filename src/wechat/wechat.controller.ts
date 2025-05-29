@@ -523,6 +523,6 @@ export class WechatController {
     @Query('url') url: string,
     @Query('corpId') corpId: string,
   ) {
-    return this.wechatService.getJssdkConfig(corpId, url);
+    return this.wechatService.getAgentJssdkConfig(corpId, url);
   }
 } 
