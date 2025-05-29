@@ -160,7 +160,7 @@ export class WechatService {
   /**
    * 获取suite_ticket
    */
-  async getSuiteTicket(): Promise<string | null> {
+  async getSuiteTicket(): Promise<string | undefined> {
     try {
       const ticket = await this.cacheService.get<string>('suite_ticket');
       if (!ticket) {

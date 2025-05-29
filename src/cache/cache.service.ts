@@ -2,12 +2,13 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 
+import { createKeyv as createKeyvRedis } from '@keyv/redis';
+
 @Injectable()
 export class CacheService {
   private readonly logger = new Logger(CacheService.name);
-
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
-
+  private readonly cacheManager = createKeyvRedis(`redis://${process.env.DB_HOST ?? 'localhost'}:6379`);
+  
   /**
    * 设置缓存
    * @param key 缓存键
@@ -29,7 +30,7 @@ export class CacheService {
    * @param key 缓存键
    * @returns 缓存值
    */
-  async get<T>(key: string): Promise<T | null> {
+  async get<T>(key: string): Promise<T | undefined> {
     try {
       const value = await this.cacheManager.get<T>(key);
       this.logger.debug(`Cache ${value ? 'hit' : 'miss'}: ${key}`);
@@ -44,9 +45,9 @@ export class CacheService {
    * 删除缓存
    * @param key 缓存键
    */
-  async del(key: string): Promise<void> {
+  async delete(key: string): Promise<void> {
     try {
-      await this.cacheManager.del(key);
+      await this.cacheManager.delete(key);
       this.logger.debug(`Cache deleted: ${key}`);
     } catch (error) {
       this.logger.error(`Failed to delete cache for key ${key}:`, error);
@@ -63,7 +64,7 @@ export class CacheService {
   async getOrSet<T>(key: string, factory: () => Promise<T>, ttl?: number): Promise<T> {
     try {
       let value = await this.get<T>(key);
-      if (value === null || value === undefined) {
+      if (value === undefined) {
         value = await factory();
         await this.set(key, value, ttl);
       }
