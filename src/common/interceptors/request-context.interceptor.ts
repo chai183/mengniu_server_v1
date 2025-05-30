@@ -23,12 +23,12 @@ export class RequestContextInterceptor implements NestInterceptor {
       console.log(token);
       try {
         // 使用 JwtService 解析 token
-        const { userid } = this.jwtService.verify(token, {
+        const res = this.jwtService.verify(token, {
           secret: this.configService.get('jwt.secretkey'),
           ignoreExpiration: true
         });
-        console.log(userid);
-        user = { userid }
+        console.log(res);
+        user = { userid: res.userid }
       } catch (error) {
         console.error('JWT解析错误', error);
       }

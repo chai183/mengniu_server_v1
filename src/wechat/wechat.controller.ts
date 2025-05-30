@@ -4,6 +4,7 @@ import { WechatService } from './wechat.service';
 import { WechatAuthService } from './wechat-auth.service';
 import * as getRawBody from 'raw-body';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('wechat')
 export class WechatController {
@@ -13,6 +14,7 @@ export class WechatController {
     private readonly wechatService: WechatService,
     private readonly wechatAuthService: WechatAuthService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) { }
 
   /**
@@ -434,6 +436,7 @@ export class WechatController {
       const token = await this.jwtService.signAsync({
         userid: userInfo.Userid,
       }, {
+        secret: this.configService.get('jwt.secretkey'),
         expiresIn: '3650d'
       });
 
