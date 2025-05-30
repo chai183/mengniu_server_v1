@@ -433,10 +433,9 @@ export class WechatController {
         );
       }
 
-      const token = await this.jwtService.signAsync({
+      const token = await this.jwtService.sign({
         userid: userInfo.Userid,
       }, {
-        secret: this.configService.get('jwt.secretkey'),
         expiresIn: '3650d'
       });
 
