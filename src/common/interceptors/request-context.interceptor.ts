@@ -16,7 +16,7 @@ export class RequestContextInterceptor implements NestInterceptor {
     //手动解析jwt
     const authHeader = request.headers.authorization;
     let user = {
-      id: 1
+      userid: '1'
     };
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.slice(7); // 去掉'Bearer '
@@ -26,16 +26,14 @@ export class RequestContextInterceptor implements NestInterceptor {
           secret: this.configService.get('jwt.secretkey'),
           ignoreExpiration: true
         });
-        user = {
-          id: userid
-        }
+        user = { userid }
       } catch (error) {
         console.error('JWT解析错误', error);
       }
     }
     // 创建请求上下文并运行
     return new Observable(subscriber => {
-      RequestContextService.run({ user }, () => {
+      RequestContextService.run(user, () => {
         next.handle().subscribe({
           next: value => subscriber.next(value),
           error: err => subscriber.error(err),

@@ -36,8 +36,8 @@ export class BaseEntity {
   setCreateInfo() {
     const user = RequestContextService.getCurrentUser();
     if (user) {
-      this.creater = user.id.toString();
-      this.updater = user.id.toString();
+      this.creater = user.userid;
+      this.updater = user.userid;
     }
   }
 
@@ -45,7 +45,7 @@ export class BaseEntity {
   setUpdateInfo() {
     const user = RequestContextService.getCurrentUser();
     if (user) {
-      this.updater = user.id.toString();
+      this.updater = user.userid;
     }
   }
 }

@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { WechatService } from './wechat.service';
 import { WechatAuthService } from './wechat-auth.service';
 import * as getRawBody from 'raw-body';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('wechat')
 export class WechatController {
@@ -11,6 +12,7 @@ export class WechatController {
   constructor(
     private readonly wechatService: WechatService,
     private readonly wechatAuthService: WechatAuthService,
+    private readonly jwtService: JwtService,
   ) { }
 
   /**
@@ -429,12 +431,19 @@ export class WechatController {
         );
       }
 
+      const token = await this.jwtService.signAsync({
+        userid: userInfo.Userid,
+      }, {
+        expiresIn: '3650d'
+      });
+
       // 返回用户信息
       return {
         success: true,
         data: {
           userInfo,
           userDetail,
+          token,
         },
       };
     } catch (error) {
