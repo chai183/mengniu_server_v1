@@ -20,12 +20,14 @@ export class RequestContextInterceptor implements NestInterceptor {
     };
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.slice(7); // 去掉'Bearer '
+      console.log(token);
       try {
         // 使用 JwtService 解析 token
         const { userid } = this.jwtService.verify(token, {
           secret: this.configService.get('jwt.secretkey'),
           ignoreExpiration: true
         });
+        console.log(userid);
         user = { userid }
       } catch (error) {
         console.error('JWT解析错误', error);
