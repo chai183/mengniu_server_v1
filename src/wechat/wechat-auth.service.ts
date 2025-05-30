@@ -229,6 +229,7 @@ export class WechatAuthService {
 
       if (response.data.errcode === 0) {
         this.logger.log('获取第三方应用访问用户身份信息成功');
+        console.log(response.data);
         return response.data;
       } else {
         throw new Error(`获取第三方应用访问用户身份信息失败: ${response.data.errmsg}`);
