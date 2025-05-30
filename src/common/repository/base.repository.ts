@@ -66,6 +66,10 @@ export class BaseRepository<T extends ObjectLiteral> {
     };
   }
 
+  async findOneByUserid(userid: string) {
+    return this.repository.findOne({ where: { userid } as unknown as FindOptionsWhere<T> });
+  }
+
   async getRepository(): Promise<Repository<T>> {
     return this.repository;
   }

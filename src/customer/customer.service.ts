@@ -145,8 +145,7 @@ export class CustomerService {
   }
 
   async findOneByUserid(userid: string) {
-    const customers = await this.customerRepository.findAll();
-    const customer = customers.find(c => c.userid === userid);
+    const customer = await this.customerRepository.findOneByUserid(userid);
     if (!customer) {
       return this.createByUserid(userid);
     }
