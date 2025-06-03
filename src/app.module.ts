@@ -14,6 +14,7 @@ import configuration from './config/index';
 import { WechatModule } from './wechat/wechat.module';
 import { MemoryCacheModule } from './cache/cache.module';
 import { CorpModule } from './corp/corp.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { CorpModule } from './corp/corp.module';
     FollowUpModule,
     WechatModule,
     CorpModule,
+    UploadModule,
   ],
   providers: [
     JwtStrategy,
