@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { WechatService } from './wechat.service';
 import { CacheService } from '../cache/cache.service';
 
 @Injectable()
@@ -13,30 +12,11 @@ export class WechatAuthService {
 
   constructor(
     private configService: ConfigService,
-    private wechatService: WechatService,
     private cacheService: CacheService,
   ) {
     this.suiteId = this.configService.get<string>('wechat.suiteId') || '';
     this.suiteSecret = this.configService.get<string>('wechat.suiteSecret') || '';
     this.redirectUri = this.configService.get<string>('wechat.redirectUri') || '';
-  }
-
-  /**
-   * 生成企业微信扫码登录URL
-   */
-  generateQRCodeLoginUrl(state?: string): string {
-    const params = new URLSearchParams({
-      appid: this.suiteId,
-      redirect_uri: encodeURIComponent(this.redirectUri),
-      response_type: 'code',
-      scope: 'snsapi_base',
-      state: state || 'STATE',
-    });
-
-    const loginUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?${params.toString()}#wechat_redirect`;
-
-    this.logger.log(`生成扫码登录URL: ${loginUrl}`);
-    return loginUrl;
   }
 
   /**
@@ -53,7 +33,7 @@ export class WechatAuthService {
       }
 
       // 缓存不存在，重新获取
-      const suiteTicket = await this.wechatService.getSuiteTicket();
+      const suiteTicket = await this.cacheService.get<string>('suite_ticket');
       if (!suiteTicket) {
         throw new Error('未找到有效的suite_ticket');
       }
@@ -79,47 +59,6 @@ export class WechatAuthService {
       this.logger.error('获取suite_access_token时发生错误:', error);
       throw error;
     }
-  }
-
-  /**
-   * 获取预授权码
-   */
-  async getPreAuthCode(suiteAccessToken: string): Promise<string> {
-    try {
-      const url = `https://qyapi.weixin.qq.com/cgi-bin/service/get_pre_auth_code?suite_access_token=${suiteAccessToken}`;
-      const data = {
-        suite_id: this.suiteId,
-      };
-
-      const response = await axios.post(url, data);
-
-      if (response.data.errcode === 0) {
-        this.logger.log('获取预授权码成功');
-        return response.data.pre_auth_code;
-      } else {
-        throw new Error(`获取预授权码失败: ${response.data.errmsg}`);
-      }
-    } catch (error) {
-      this.logger.error('获取预授权码时发生错误:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * 生成授权安装链接
-   */
-  generateAuthInstallUrl(preAuthCode: string, state?: string): string {
-    const params = new URLSearchParams({
-      suite_id: this.suiteId,
-      pre_auth_code: preAuthCode,
-      redirect_uri: encodeURIComponent(this.redirectUri),
-      state: state || 'STATE',
-    });
-
-    const installUrl = `https://open.work.weixin.qq.com/3rdapp/install?${params.toString()}`;
-
-    this.logger.log(`生成授权安装链接: ${installUrl}`);
-    return installUrl;
   }
 
   /**
