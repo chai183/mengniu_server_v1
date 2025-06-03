@@ -5,6 +5,7 @@ import { WechatAuthService } from './wechat-auth.service';
 import * as getRawBody from 'raw-body';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { CorpService } from '../corp/corp.service';
 
 @Controller('wechat')
 export class WechatController {
@@ -15,6 +16,7 @@ export class WechatController {
     private readonly wechatAuthService: WechatAuthService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly corpService: CorpService,
   ) { }
 
   /**
@@ -432,6 +434,17 @@ export class WechatController {
           userInfo.user_ticket
         );
       }
+
+      const corp = await this.corpService.findByCorpId(userInfo.CorpId);
+      if (!corp) {
+        this.logger.error('企业微信授权不存在');
+        return {
+          success: false,
+          message: '企业微信授权不存在',
+        };
+      }
+
+      userInfo.agentid = corp.agentid;
 
       const token = this.jwtService.sign({
         userid: userInfo.UserId
