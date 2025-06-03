@@ -6,6 +6,7 @@ import { CacheService } from '../cache/cache.service';
 import axios from 'axios';
 import { CorpService } from '../corp/corp.service';
 import { createHash } from 'crypto';
+import { WechatAuthService } from './wechat-auth.service';
 
 @Injectable()
 export class WechatService {
@@ -17,6 +18,7 @@ export class WechatService {
     private configService: ConfigService,
     private cacheService: CacheService,
     private corpService: CorpService,
+    private wechatAuthService: WechatAuthService,
   ) {
     // 从配置中获取企业微信应用的Token和EncodingAESKey
     this.token = this.configService.get<string>('wechat.token') || '';
@@ -178,8 +180,8 @@ export class WechatService {
    */
   async getPermanentCode(authCode: string): Promise<string | null> {
     try {
-      //从缓存中获取 suite_access_token
-      const suiteAccessToken = await this.cacheService.get<string>('suite_access_token');
+      // 获取suite_access_token
+      const suiteAccessToken = await this.wechatAuthService.getSuiteAccessToken();
       if (!suiteAccessToken) {
         this.logger.error('未找到suite_access_token');
         return null;
