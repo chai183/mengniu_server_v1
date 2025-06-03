@@ -443,7 +443,7 @@ export class WechatController {
           message: '企业微信授权不存在',
         };
       }
-
+      console.log(corp);
       userInfo.agentid = corp.agentid;
 
       const token = this.jwtService.sign({
