@@ -10,7 +10,7 @@ export class UploadController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: '/var/www/static',
+        destination: './static',
         filename: (req, file, callback) => {
           // 生成唯一文件名
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
