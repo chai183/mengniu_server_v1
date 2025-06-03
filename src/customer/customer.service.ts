@@ -149,7 +149,6 @@ export class CustomerService {
     if (!customer) {
       return this.createByUserid(userid);
     }
-    console.log(customer);
     return customer;
   }
 

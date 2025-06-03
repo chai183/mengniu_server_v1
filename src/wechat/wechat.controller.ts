@@ -547,7 +547,6 @@ export class WechatController {
     @Query('url') url: string,
     @Query('corpId') corpId: string,
   ) {
-    console.log(corpId, url);
     return this.wechatService.getAgentJssdkConfig(corpId, decodeURIComponent(url));
   }
 } 

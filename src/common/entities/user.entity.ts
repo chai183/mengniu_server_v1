@@ -35,7 +35,6 @@ export class BaseEntity {
   @BeforeInsert()
   setCreateInfo() {
     const user = RequestContextService.getCurrentUser();
-    console.log(user);
     if (user) {
       this.creater = user.userid;
       this.updater = user.userid;
@@ -45,7 +44,6 @@ export class BaseEntity {
   @BeforeUpdate()
   setUpdateInfo() {
     const user = RequestContextService.getCurrentUser();
-    console.log(user);
     if (user) {
       this.updater = user.userid;
     }
