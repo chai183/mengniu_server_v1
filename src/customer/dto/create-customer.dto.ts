@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsPhoneNumber, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class CreateCustomerDto {
   @IsNotEmpty()
@@ -20,5 +20,9 @@ export class CreateCustomerDto {
   @IsString()
   @IsOptional()
   remark: string;
+
+  @IsString()
+  @IsOptional()
+  images: string;
 
 }

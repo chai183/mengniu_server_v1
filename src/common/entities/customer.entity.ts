@@ -33,6 +33,9 @@ export class Customer extends BaseEntity {
   @ApiProperty({ description: '跟进备注' })
   remark: string;
 
+  @Column({ nullable: true })
+  @ApiProperty({ description: '图片' })
+  images: string;
 
   @Column({ nullable: true })
   @ApiProperty({ description: '外部联系人的userid，注意不是企业成员的账号' })
