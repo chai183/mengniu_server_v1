@@ -25,6 +25,7 @@ services:
     # 为PM2日志创建数据卷
     volumes:
       - /root/.pm2/logs:/root/.pm2/logs
+      - /var/www/static:/static
     # 在Linux上启用host.docker.internal解析
     extra_hosts:
       - "host.docker.internal:host-gateway"
