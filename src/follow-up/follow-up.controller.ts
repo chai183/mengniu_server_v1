@@ -12,7 +12,7 @@ export class FollowUpController {
   constructor(private readonly followUpService: FollowUpService) { }
 
   @Get('page')
-  findAllPage(@Query() query: PageOptionsDto) {
+  findAllPage(@Query() query: any) {
     return this.followUpService.findAllPage(query);
   }
 

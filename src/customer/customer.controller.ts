@@ -23,7 +23,7 @@ export class CustomerController {
 
 
   @Get('page')
-  findAllPage(@Query() query: PageOptionsDto) {
+  findAllPage(@Query() query: any) {
     return this.customerService.findAllPage(query);
   }
 

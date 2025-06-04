@@ -24,7 +24,7 @@ export class UserController {
 
   //分页获取用户
   @Get('page')
-  findAllPage(@Query() query: PageOptionsDto) {
+  findAllPage(@Query() query: any) {
     return this.userService.findAllPage(query);
   }
 
