@@ -21,4 +21,8 @@ export class FollowUp extends BaseEntity {
   @Column()
   @ApiProperty({ description: '跟进类型' })
   type: number;
+
+  @Column({ nullable: true })
+  @ApiProperty({ description: '图片' })
+  images: string;
 } 

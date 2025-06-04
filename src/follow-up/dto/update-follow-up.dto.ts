@@ -6,4 +6,9 @@ export class UpdateFollowUpDto {
   @IsOptional()
   @ApiProperty({ description: '跟进内容', required: false })
   content?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ description: '图片', required: false })
+  images?: string;
 } 

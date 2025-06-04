@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsOptional } from 'class-validator';
 
 export class CreateFollowUpDto {
   @IsNumber()
@@ -16,4 +16,9 @@ export class CreateFollowUpDto {
   @IsNotEmpty()
   @ApiProperty({ description: '跟进类型' })
   type: number;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ description: '图片' })
+  images: string;
 } 
