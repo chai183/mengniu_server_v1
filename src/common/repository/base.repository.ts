@@ -1,4 +1,4 @@
-import { Repository, FindOptionsWhere, Between, Like, ObjectLiteral, DeepPartial, UpdateResult, DeleteResult } from 'typeorm';
+import { Repository, FindOptionsWhere, Between, Like, ObjectLiteral, DeepPartial, UpdateResult, DeleteResult, FindOptionsOrder } from 'typeorm';
 import { BusinessException } from '../exceptions/business.exception';
 import { Inject } from '@nestjs/common';
 
@@ -57,7 +57,10 @@ export class BaseRepository<T extends ObjectLiteral> {
     const [data, total] = await this.repository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
-      where
+      where,
+      order: {
+        createTime: 'DESC'
+      } as unknown as FindOptionsOrder<T>
     });
 
     return {
