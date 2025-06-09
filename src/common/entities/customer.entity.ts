@@ -1,6 +1,7 @@
 import { Entity, Column } from 'typeorm';
 import { BaseEntity } from './user.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { Good } from './good.entity';
 
 @Entity()
 export class Customer extends BaseEntity {
@@ -40,4 +41,8 @@ export class Customer extends BaseEntity {
   @Column({ nullable: true })
   @ApiProperty({ description: '外部联系人的userid，注意不是企业成员的账号' })
   userid: string;
+
+  @Column('simple-array', { nullable: true })
+  @ApiProperty({ description: '产品列表', type: [String] })
+  shopList: string[];
 } 

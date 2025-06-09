@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
 import { BaseRepository } from "../repository/base.repository";
-import { Repository,EntityManager } from "typeorm";
+import { Repository, EntityManager, ObjectLiteral } from "typeorm";
 
 @Module({})
 export class BaseRepositoryModule {
-    static forFeature(entities: any[]) {
+    static forFeature(entities: (new () => ObjectLiteral & { isDeleted: boolean })[]) {
         return {
             module: BaseRepositoryModule,
             providers: entities.map(entity => ({

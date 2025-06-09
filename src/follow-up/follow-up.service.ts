@@ -43,9 +43,9 @@ export class FollowUpService {
   async findOne(id: number): Promise<FollowUp> {
     const repository = await this.followUpRepository.getRepository();
     const followUp = await repository.findOne({
-      where: { 
-        id, 
-        isDeleted: false 
+      where: {
+        id,
+        isDeleted: false
       },
       relations: ['customer'],
     });
@@ -57,22 +57,11 @@ export class FollowUpService {
     return followUp;
   }
 
-  async update(id: number, updateFollowUpDto: UpdateFollowUpDto): Promise<FollowUp> {
-    const repository = await this.followUpRepository.getRepository();
-    const followUp = await this.findOne(id);
-    
-    // 更新实体
-    repository.merge(followUp, updateFollowUpDto);
-    
-    return repository.save(followUp);
+  async update(id: number, updateFollowUpDto: UpdateFollowUpDto) {
+    return this.followUpRepository.update(id, updateFollowUpDto);
   }
 
-  async remove(id: number): Promise<void> {
-    const repository = await this.followUpRepository.getRepository();
-    const followUp = await this.findOne(id);
-    
-    // 软删除
-    followUp.isDeleted = true;
-    await repository.save(followUp);
+  async remove(id: number): Promise<FollowUp> {
+    return this.followUpRepository.remove(id);
   }
 } 

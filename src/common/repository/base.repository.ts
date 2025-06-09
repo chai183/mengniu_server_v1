@@ -2,7 +2,11 @@ import { Repository, FindOptionsWhere, Between, Like, ObjectLiteral, DeepPartial
 import { BusinessException } from '../exceptions/business.exception';
 import { Inject } from '@nestjs/common';
 
-export class BaseRepository<T extends ObjectLiteral> {
+interface BaseEntity extends ObjectLiteral {
+  isDeleted: boolean;
+}
+
+export class BaseRepository<T extends BaseEntity> {
   constructor(protected readonly repository: Repository<T>) {}
 
   async create(data: DeepPartial<T>): Promise<T> {
@@ -10,8 +14,13 @@ export class BaseRepository<T extends ObjectLiteral> {
     return this.repository.save(entity);
   }
 
-  async findAll(): Promise<T[]> {
-    return this.repository.find();
+  async findAll(query: any = {}): Promise<T[]> {
+    const { name } = query;
+    const where: any = { isDeleted: false };
+    if (name) {
+      where.name = Like(`%${name}%`);
+    }
+    return this.repository.find({ where });
   }
 
   async findOne(id: number): Promise<T | null> {
@@ -26,18 +35,19 @@ export class BaseRepository<T extends ObjectLiteral> {
     return this.repository.update(id, data as any);
   }
 
-  async remove(id: number): Promise<DeleteResult> {
+  async remove(id: number): Promise<T> {
     const entity = await this.findOne(id);
     if (!entity) {
       throw new BusinessException(1001, '记录不存在');
     }
-    return this.repository.delete(id);
+    entity.isDeleted = true;
+    return this.repository.save(entity);
   }
 
   async findAllPage(query: any) {
     const { page, limit, 'createTime[]': createTime, 'updateTime[]': updateTime, ...rest } = query;
     
-    const where: any = { ...rest };
+    const where: any = { isDeleted: false, ...rest };
     
     // 处理时间范围查询
     if (createTime) {
@@ -78,7 +88,6 @@ export class BaseRepository<T extends ObjectLiteral> {
   }
 } 
 
-export function InjectBaseRepository<T extends ObjectLiteral>(entity: new () => T) {
+export function InjectBaseRepository<T extends BaseEntity>(entity: new () => T) {
   return Inject(entity.name);
 }
-
