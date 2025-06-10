@@ -3,6 +3,12 @@ import { BaseEntity } from './user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Good } from './good.entity';
 
+export enum CustomerStatus {
+  PENDING = '待跟进',
+  DEAL = '已成交',
+  LOST = '已流失'
+}
+
 @Entity()
 export class Customer extends BaseEntity {
 
@@ -41,6 +47,18 @@ export class Customer extends BaseEntity {
   @Column({ nullable: true })
   @ApiProperty({ description: '外部联系人的userid，注意不是企业成员的账号' })
   userid: string;
+
+  @Column({
+    type: 'enum',
+    enum: CustomerStatus,
+    default: CustomerStatus.PENDING
+  })
+  @ApiProperty({ 
+    description: '客户状态',
+    enum: CustomerStatus,
+    example: CustomerStatus.PENDING
+  })
+  status: CustomerStatus;
 
   @Column('simple-array', { nullable: true })
   @ApiProperty({ description: '产品列表', type: [String] })
