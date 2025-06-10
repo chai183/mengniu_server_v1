@@ -4,9 +4,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Good } from './good.entity';
 
 export enum CustomerStatus {
-  PENDING = '待跟进',
-  DEAL = '已成交',
-  LOST = '已流失'
+  PENDING = 0,  // 待跟进
+  DEAL = 1,     // 已成交
+  LOST = 2      // 已流失
 }
 
 @Entity()
@@ -54,7 +54,7 @@ export class Customer extends BaseEntity {
     default: CustomerStatus.PENDING
   })
   @ApiProperty({ 
-    description: '客户状态',
+    description: '客户状态（0:待跟进, 1:已成交, 2:已流失）',
     enum: CustomerStatus,
     example: CustomerStatus.PENDING
   })
