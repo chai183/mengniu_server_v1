@@ -1,4 +1,4 @@
-import { Repository, FindOptionsWhere, Between, Like, ObjectLiteral, DeepPartial, UpdateResult, DeleteResult, FindOptionsOrder } from 'typeorm';
+import { Repository, FindOptionsWhere, Between, Like, ObjectLiteral, DeepPartial, UpdateResult, DeleteResult, FindOptionsOrder, In } from 'typeorm';
 import { BusinessException } from '../exceptions/business.exception';
 import { Inject } from '@nestjs/common';
 
@@ -7,7 +7,7 @@ interface BaseEntity extends ObjectLiteral {
 }
 
 export class BaseRepository<T extends BaseEntity> {
-  constructor(protected readonly repository: Repository<T>) {}
+  constructor(protected readonly repository: Repository<T>) { }
 
   async create(data: DeepPartial<T>): Promise<T> {
     const entity = this.repository.create(data);
@@ -45,10 +45,10 @@ export class BaseRepository<T extends BaseEntity> {
   }
 
   async findAllPage(query: any) {
-    const { page, limit, 'createTime[]': createTime, 'updateTime[]': updateTime, ...rest } = query;
-    
+    const { page, limit, createTime, updateTime, ...rest } = query;
+
     const where: any = { isDeleted: false, ...rest };
-    
+
     // 处理时间范围查询
     if (createTime) {
       where.createTime = Between(createTime[0], createTime[1]);
@@ -57,9 +57,13 @@ export class BaseRepository<T extends BaseEntity> {
       where.updateTime = Between(updateTime[0], updateTime[1]);
     }
 
-    // 处理模糊查询
+    // 处理数组参数
     Object.keys(where).forEach(key => {
-      if (typeof where[key] === 'string' && where[key]) {
+      if (Array.isArray(where[key])) {
+        // 如果是数组，使用 In 操作符
+        where[key] = In(where[key]);
+      } else if (typeof where[key] === 'string' && where[key]) {
+        // 处理模糊查询
         where[key] = Like(`%${where[key]}%`);
       }
     });
@@ -86,7 +90,7 @@ export class BaseRepository<T extends BaseEntity> {
   async getRepository(): Promise<Repository<T>> {
     return this.repository;
   }
-} 
+}
 
 export function InjectBaseRepository<T extends BaseEntity>(entity: new () => T) {
   return Inject(entity.name);

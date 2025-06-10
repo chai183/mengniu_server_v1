@@ -4,6 +4,7 @@ import { useContainer } from 'class-validator';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ValidationPipe } from './common/pipes/validation.pipe';
+import { ArrayFormatPipe } from './common/pipes/array-format.pipe';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 async function bootstrap() {
@@ -29,7 +30,7 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   
   // 全局应用验证管道
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe(), new ArrayFormatPipe());
 
   // 设置swagger文档
   const config = new DocumentBuilder()

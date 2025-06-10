@@ -18,6 +18,13 @@ export class WechatController {
     private readonly configService: ConfigService,
     private readonly corpService: CorpService,
   ) { }
+
+
+  @Post('login')
+  async login(@Body() body: { code: string }) {
+    return this.wechatService.login(body.code);
+  }
+  
   /**
    * 数据回调URL验证 - GET请求
    * 用于验证回调URL的有效性
@@ -318,7 +325,6 @@ export class WechatController {
           message: '企业微信授权不存在',
         };
       }
-      console.log(corp);
       userInfo.agentid = corp.agentid;
 
       const token = this.jwtService.sign({

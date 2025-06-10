@@ -26,7 +26,6 @@ export class RequestContextInterceptor implements NestInterceptor {
           secret: this.configService.get('jwt.secretkey'),
           ignoreExpiration: true
         });
-        console.log(res);
         user = res
       } catch (error) {
         console.error('JWT解析错误', error);

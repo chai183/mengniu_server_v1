@@ -1,7 +1,6 @@
 import { Entity, Column } from 'typeorm';
 import { BaseEntity } from './user.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { Good } from './good.entity';
 
 export enum CustomerStatus {
   PENDING = 0,  // 待跟进

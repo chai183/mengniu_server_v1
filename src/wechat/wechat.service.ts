@@ -7,6 +7,8 @@ import axios from 'axios';
 import { CorpService } from '../corp/corp.service';
 import { createHash } from 'crypto';
 import { WechatAuthService } from './wechat-auth.service';
+import { HttpException, HttpStatus } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class WechatService {
@@ -19,6 +21,7 @@ export class WechatService {
     private cacheService: CacheService,
     private corpService: CorpService,
     private wechatAuthService: WechatAuthService,
+    private jwtService: JwtService,
   ) {
     // 从配置中获取企业微信应用的Token和EncodingAESKey
     this.token = this.configService.get<string>('wechat.token') || '';
@@ -669,4 +672,147 @@ export class WechatService {
       return null;
     }
   }
+
+  /**
+   * 从企业微信服务器获取 access_token
+   * @returns access_token 和过期时间
+   */
+  private async fetchAccessToken(): Promise<{ accessToken: string; expiresIn: number } | null> {
+    try {
+      this.logger.log('获取企业微信 access_token');
+      const corpId = this.configService.get<string>('wecom.corpId');
+      const corpSecret = this.configService.get<string>('wecom.corpSecret');
+
+      const url = `https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpId}&corpsecret=${corpSecret}`;
+      const { data } = await axios.get(url);
+
+      if (data.errcode !== 0) {
+        this.logger.error(`获取 access_token 失败: ${data.errmsg}`);
+        return null;
+      }
+
+      this.logger.log('获取 access_token 成功');
+      return {
+        accessToken: data.access_token,
+        expiresIn: data.expires_in
+      };
+    } catch (error) {
+      this.logger.error('获取 access_token 时发生错误:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 保存 access_token 到缓存
+   * @param accessToken access_token
+   * @param expiresIn 过期时间（秒）
+   */
+  private async saveAccessToken(accessToken: string, expiresIn: number): Promise<void> {
+    try {
+      // 提前5分钟过期，避免临界点问题
+      const expireTime = (expiresIn - 300) * 1000;
+      await this.cacheService.set('wecom_access_token', accessToken, expireTime);
+      this.logger.log('成功保存 access_token 到缓存');
+    } catch (error) {
+      this.logger.error('保存 access_token 到缓存时发生错误:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 获取企业微信 access_token
+   * @returns access_token
+   */
+  async getAccessToken(): Promise<string | null> {
+    try {
+      // 先从缓存中获取
+      const cachedToken = await this.cacheService.get<string>('wecom_access_token');
+      if (cachedToken) {
+        this.logger.log('从缓存中获取 access_token 成功');
+        return cachedToken;
+      }
+
+      // 缓存中没有，重新获取
+      const result = await this.fetchAccessToken();
+      if (!result) {
+        this.logger.error('获取 access_token 失败');
+        return null;
+      }
+
+      // 保存到缓存
+      await this.saveAccessToken(result.accessToken, result.expiresIn);
+      return result.accessToken;
+    } catch (error) {
+      this.logger.error('获取 access_token 时发生错误:', error);
+      return null;
+    }
+  }
+
+  async jscode2session(code: string): Promise<any> {
+    const accessToken = await this.getAccessToken();
+    const url = `https://qyapi.weixin.qq.com/cgi-bin/miniprogram/jscode2session?access_token=${accessToken}&js_code=${code}&grant_type=authorization_code`;
+    const response = await axios.get(url);
+    if (response.data.errcode) {
+      throw new HttpException(`微信登录失败: ${response.data.errmsg}`, HttpStatus.BAD_REQUEST);
+    }
+    return response.data;
+  }
+
+  /**
+   * 企业微信登录
+   * @param code 登录凭证
+   * @returns 登录结果
+   */
+  async login(code: string): Promise<any> {
+    const { userid } = await this.jscode2session(code);
+
+    const token = this.jwtService.sign({ userid }, {
+      expiresIn: '3650d'
+    });
+
+    return { token };
+  }
+
+  /**
+   * 获取客户详情
+   * @param externalUserId 外部联系人的userid
+   * @param cursor 分页游标
+   * @returns 客户详情信息
+   */
+  async getExternalContact(externalUserId: string, cursor?: string): Promise<any> {
+    try {
+      this.logger.log(`获取外部联系人(${externalUserId})详情`);
+
+      // 获取访问令牌
+      const accessToken = await this.getAccessToken();
+      if (!accessToken) {
+        this.logger.error('获取访问令牌失败');
+        throw new HttpException('获取访问令牌失败', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      // 构建请求URL
+      let url = `https://qyapi.weixin.qq.com/cgi-bin/externalcontact/get?access_token=${accessToken}&external_userid=${externalUserId}`;
+      if (cursor) {
+        url += `&cursor=${cursor}`;
+      }
+
+      // 发送请求
+      const { data } = await axios.get(url);
+
+      if (data.errcode !== 0) {
+        this.logger.error(`获取客户详情失败: ${data.errmsg}`);
+        throw new HttpException(`获取客户详情失败: ${data.errmsg}`, HttpStatus.BAD_REQUEST);
+      }
+
+      this.logger.log(`成功获取外部联系人(${externalUserId})详情`);
+      return data;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('获取客户详情时发生错误:', error);
+      throw new HttpException('获取客户详情失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
 } 
