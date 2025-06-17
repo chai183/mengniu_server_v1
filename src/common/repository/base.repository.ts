@@ -51,10 +51,26 @@ export class BaseRepository<T extends BaseEntity> {
 
     // 处理时间范围查询
     if (createTime) {
-      where.createTime = Between(createTime[0], createTime[1]);
+      if (Array.isArray(createTime)) {
+        where.createTime = Between(createTime[0], createTime[1]);
+      } else {
+        if (createTime.includes(',')) {
+          where.createTime = Between(...(createTime.split(',') as [string, string]));
+        } else {
+          where.createTime = createTime;
+        }
+      }
     }
     if (updateTime) {
-      where.updateTime = Between(updateTime[0], updateTime[1]);
+      if (Array.isArray(updateTime)) {
+        where.updateTime = Between(updateTime[0], updateTime[1]);
+      } else {
+        if (updateTime.includes(',')) {
+          where.updateTime = Between(...(updateTime.split(',') as [string, string]));
+        } else {
+          where.updateTime = updateTime;
+        }
+      }
     }
 
     // 处理数组参数
