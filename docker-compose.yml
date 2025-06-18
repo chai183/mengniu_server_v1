@@ -10,12 +10,10 @@ services:
       - NODE_ENV=production
       - PORT=3000
       # 使用host.docker.internal连接宿主机
-      - DB_HOST=host.docker.internal
-      # 注释掉固定IP方式
-      # - DB_HOST=172.17.0.1
+      - DB_HOST=rm-bp1h1uj8tk619834plo.mysql.rds.aliyuncs.com
       - DB_PORT=3306
-      - DB_USERNAME=root
-      - DB_PASSWORD=123456
+      - DB_USERNAME=dms_user_ea9646c
+      - DB_PASSWORD=Chai826300474
       - DB_DATABASE=db_template
       # PM2配置 - 实例数量
       - PM2_INSTANCES=max
@@ -26,6 +24,3 @@ services:
     volumes:
       - /root/.pm2/logs:/root/.pm2/logs
       - /var/www/static:/static
-    # 在Linux上启用host.docker.internal解析
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
