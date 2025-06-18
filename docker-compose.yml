@@ -9,7 +9,6 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      # 使用host.docker.internal连接宿主机
       - DB_HOST=rm-bp1h1uj8tk619834plo.mysql.rds.aliyuncs.com
       - DB_PORT=3306
       - DB_USERNAME=dms_user_ea9646c
