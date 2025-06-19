@@ -80,12 +80,12 @@ wechat:
   appSecret: '1f219d513502421b75978636b7a82eb2'
   suiteId: 'wwe22aaa879c937c05'
   suiteSecret: 'bmb_Q6wjCWl1cK_-vjNAOVv_o5KtlFnL_X3q1ruDcns'
-  token: 'Hfw4xEwg1i'
-  encodingAesKey: '3N7UhnSKXORVocYD3Qpee355wOcgLMJESdSM2X9iywN'
+  token: 'PkjxMSpmA0JGmAqVG'
+  encodingAesKey: 'Ezhs9uUUNYClkwcOsmjA4iy7iFJFbK8SLx3ZAtYQd8q'
   redirectUri: 'http://czyymf.xyz/app'
 
 # 企业微信配置
 wecom:
-  corpId: 'ww86026687f756a822'
-  corpSecret: 'ug1sUAG9s-nQo3t_hBPf54cPVcVcZ4oqs2gkYZkyHsU'
-  agentId: '1000005'
+  corpId: 'wwa41414264bb64d8d'
+  corpSecret: 'KWFNOG_3rRWCu7r1QG0W0fn0ts1M5SEvK8V29mGgwGc'
+  agentId: '1000003'
