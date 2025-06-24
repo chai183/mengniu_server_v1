@@ -86,6 +86,6 @@ wechat:
 
 # 企业微信配置
 wecom:
-  corpId: 'wwa41414264bb64d8d'
-  corpSecret: 'KWFNOG_3rRWCu7r1QG0W0fn0ts1M5SEvK8V29mGgwGc'
-  agentId: '1000003'
+  corpId: 'ww86026687f756a822'
+  corpSecret: 'ug1sUAG9s-nQo3t_hBPf54cPVcVcZ4oqs2gkYZkyHsU'
+  agentId: '1000005'
