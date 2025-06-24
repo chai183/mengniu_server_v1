@@ -80,8 +80,8 @@ wechat:
   appSecret: '1f219d513502421b75978636b7a82eb2'
   suiteId: 'wwe22aaa879c937c05'
   suiteSecret: 'bmb_Q6wjCWl1cK_-vjNAOVv_o5KtlFnL_X3q1ruDcns'
-  token: 'PkjxMSpmA0JGmAqVG'
-  encodingAesKey: 'Ezhs9uUUNYClkwcOsmjA4iy7iFJFbK8SLx3ZAtYQd8q'
+  token: 'jkzqHbZOk'
+  encodingAesKey: 'IyQK1x9iwhK6aWHGXHmCOb7mNeafQtxM3AJmT6AiZXV'
   redirectUri: 'http://czyymf.xyz/app'
 
 # 企业微信配置
