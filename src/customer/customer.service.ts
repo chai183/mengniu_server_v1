@@ -8,6 +8,7 @@ import { BusinessException } from '../common/exceptions/business.exception';
 import { PageOptionsDto } from './dto/page-customer.dto';
 import { BaseRepository, InjectBaseRepository } from '../common/repository/base.repository';
 import { Like } from 'typeorm';
+import { WechatService } from '../wechat/wechat.service';
 
 const externalcontactGet = async (userid: string) => {
   return {
@@ -115,6 +116,8 @@ export class CustomerService {
   @InjectBaseRepository(Customer)
   private readonly customerRepository: BaseRepository<Customer>;
 
+  constructor(private readonly wechatService: WechatService) {}
+
   async create(createCustomerDto: CreateCustomerDto) {
     return this.customerRepository.create(createCustomerDto);
   }
@@ -162,5 +165,73 @@ export class CustomerService {
       throw new BusinessException(1001, '客户不存在');
     }
     return this.customerRepository.update(id, { isDeleted: true });
+  }
+
+  /**
+   * 基于 getAllExternalContacts 批量添加客户
+   * @param useridList 企业成员的userid列表
+   * @param limit 每页返回的最大记录数，默认100
+   * @returns 批量添加结果
+   */
+  async batchCreateFromExternalContacts(useridList: string[]) {
+    try {
+      // 获取所有外部联系人数据
+      const externalContacts = await this.wechatService.getAllExternalContacts(useridList);
+      
+      if (!externalContacts || externalContacts.length === 0) {
+        return {
+          success: true,
+          message: '没有找到外部联系人数据',
+          totalCount: 0,
+          createdCount: 0,
+          updatedCount: 0,
+          createdCustomers: [],
+          updatedCustomers: []
+        };
+      }
+
+      const createdCustomers: any[] = [];
+      const updatedCustomers: any[] = [];
+      let createdCount = 0;
+      let updatedCount = 0;
+
+      // 处理每个外部联系人
+      for (const contact of externalContacts) {
+        try {
+          // 检查客户是否已存在
+          const existingCustomer = await this.customerRepository.findOneByUserid(contact.userid);
+          
+          if (existingCustomer) {
+            // 更新已存在的客户
+            await this.customerRepository.update(existingCustomer.id, contact);
+            updatedCustomers.push(contact);
+            updatedCount++;
+          } else {
+            // 创建新客户
+            const createdCustomer = await this.customerRepository.create(contact);
+            createdCustomers.push(createdCustomer);
+            createdCount++;
+          }
+
+        } catch (error) {
+          console.error(`处理外部联系人 ${contact.external_userid} 时发生错误:`, error);
+          // 继续处理下一个客户，不中断整个流程
+        }
+      }
+
+      return {
+        success: true,
+        message: '批量添加客户完成',
+        totalCount: externalContacts.length,
+        createdCount,
+        updatedCount,
+        createdCustomers,
+        updatedCustomers
+      };
+
+    } catch (error) {
+      console.error('批量添加客户时发生错误:', error);
+      throw new BusinessException(1002, `批量添加客户失败: ${error.message}`);
+    }
   }
 } 

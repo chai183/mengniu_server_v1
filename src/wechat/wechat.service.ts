@@ -816,4 +816,154 @@ export class WechatService {
     }
   }
 
+  /**
+   * 批量获取客户详情
+   * @param useridList 企业成员的userid列表，最多支持100个
+   * @param cursor 用于分页查询的游标，首次调用可不填
+   * @param limit 返回的最大记录数，最大值100，默认值50
+   * @returns 客户详情列表
+   */
+  async batchGetExternalContacts(
+    useridList: string[],
+    cursor?: string,
+    limit: number = 100
+  ): Promise<any> {
+    try {
+      this.logger.log(`批量获取客户详情 - 用户列表: ${useridList.join(',')}, 游标: ${cursor}, 限制: ${limit}`);
+
+      // 参数验证
+      if (!useridList || useridList.length === 0) {
+        throw new HttpException('用户列表不能为空', HttpStatus.BAD_REQUEST);
+      }
+
+      if (useridList.length > 100) {
+        throw new HttpException('用户列表最多支持100个', HttpStatus.BAD_REQUEST);
+      }
+
+      if (limit > 100) {
+        limit = 100;
+        this.logger.warn('限制数量超过最大值100，已自动调整为100');
+      }
+
+      // 获取访问令牌
+      const accessToken = await this.getAccessToken();
+      if (!accessToken) {
+        this.logger.error('获取访问令牌失败');
+        throw new HttpException('获取访问令牌失败', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      // 构建请求体
+      const requestBody: any = {
+        userid_list: useridList,
+        limit: limit
+      };
+
+      if (cursor) {
+        requestBody.cursor = cursor;
+      }
+
+      // 发送请求
+      const { data } = await axios.post(
+        `https://qyapi.weixin.qq.com/cgi-bin/externalcontact/batch/get_by_user?access_token=${accessToken}`,
+        requestBody
+      );
+
+      if (data.errcode !== 0) {
+        this.logger.error(`批量获取客户详情失败: ${data.errmsg}`);
+        throw new HttpException(`批量获取客户详情失败: ${data.errmsg}`, HttpStatus.BAD_REQUEST);
+      }
+
+      this.logger.log(`成功批量获取客户详情，返回 ${data.external_contact_list?.length || 0} 条记录`);
+
+      // 记录失败信息
+      if (data.fail_info?.unlicensed_userid_list?.length > 0) {
+        this.logger.warn(`部分用户无有效互通许可: ${data.fail_info.unlicensed_userid_list.join(',')}`);
+      }
+
+      return {
+        externalContactList: data.external_contact_list || [],
+        nextCursor: data.next_cursor || '',
+        failInfo: data.fail_info || null,
+        totalCount: data.external_contact_list?.length || 0
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('批量获取客户详情时发生错误:', error);
+      throw new HttpException('批量获取客户详情失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /**
+   * 分页批量获取客户详情
+   * @param useridList 企业成员的userid列表，最多支持100个
+   * @param limit 每页返回的最大记录数，最大值100，默认值50
+   * @returns 所有客户详情列表
+   */
+  async getAllExternalContacts(useridList: string[], limit: number = 100): Promise<any[]> {
+    return [
+      {
+        "userid": "woAJ2GCAAAXtWyujaWJHDDGi0mACHDDD",
+        "name": "李四11122233344",
+        "position": "Manager",
+        "avatar": "http://p.qlogo.cn/bizmail/IcsdgagqefergqerhewSdage/0",
+        "corp_name": "腾讯",
+        "corp_full_name": "腾讯科技有限公司",
+        "type": 2,
+        "gender": 1,
+        "unionid": "ozynqsulJFCZ2z1aYeS8h-nuasdAAA",
+        "followUserids": ["rocky"]
+      },
+      {
+        "userid": "woAJ2GCAAAXtWyujaWJHDDGi0mACHBBB",
+        "name": "王五",
+        "position": "Engineer",
+        "avatar": "http://p.qlogo.cn/bizmail/IcsdgagqefergqerhewSdage/0",
+        "corp_name": "腾讯",
+        "corp_full_name": "腾讯科技有限公司",
+        "type": 2,
+        "gender": 1,
+        "unionid": "ozynqsulJFCZ2asdaf8h-nuasdAAA",
+        "followUserids": ["lisi"]
+      }
+    ]
+    try {
+      this.logger.log(`开始分页获取所有客户详情 - 用户列表: ${useridList.join(',')}`);
+
+      const allContacts: any[] = [];
+      let cursor = '';
+      let hasMore = true;
+      let pageCount = 0;
+
+      while (hasMore) {
+        pageCount++;
+        this.logger.log(`正在获取第 ${pageCount} 页数据...`);
+
+        const result = await this.batchGetExternalContacts(useridList, cursor, limit);
+
+        if (result.externalContactList && result.externalContactList.length > 0) {
+          allContacts.push(...result.externalContactList);
+          this.logger.log(`第 ${pageCount} 页获取到 ${result.externalContactList.length} 条记录`);
+        }
+
+        // 检查是否还有更多数据
+        if (result.nextCursor && result.nextCursor.trim() !== '') {
+          cursor = result.nextCursor;
+        } else {
+          hasMore = false;
+          this.logger.log('已获取所有数据，分页结束');
+        }
+      }
+
+      this.logger.log(`分页获取完成，总共获取到 ${allContacts.length} 条客户记录`);
+      return allContacts;
+    } catch (error) {
+      this.logger.error('分页批量获取客户详情时发生错误:', error);
+      throw error;
+    }
+  }
+
+
+
 } 

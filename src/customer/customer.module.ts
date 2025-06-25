@@ -4,9 +4,10 @@ import { Customer } from '../common/entities';
 import { CustomerService } from './customer.service';
 import { CustomerController } from './customer.controller';
 import { BaseRepositoryModule } from '../common/modules/base.repository.module';
+import { WechatModule } from '../wechat/wechat.module';
 
 @Module({
-  imports: [BaseRepositoryModule.forFeature([Customer])],
+  imports: [BaseRepositoryModule.forFeature([Customer]), WechatModule],
   controllers: [CustomerController],
   providers: [CustomerService],
   exports: [CustomerService],

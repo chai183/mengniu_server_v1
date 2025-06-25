@@ -62,4 +62,8 @@ export class Customer extends BaseEntity {
   @Column('simple-array', { nullable: true })
   @ApiProperty({ description: '产品列表', type: [String] })
   shopList: string[];
+
+  @Column('simple-array', { nullable: true })
+  @ApiProperty({ description: '跟进人列表' })
+  followUserids: string[];
 } 

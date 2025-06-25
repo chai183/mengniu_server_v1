@@ -12,3 +12,9 @@ export class CreateUserDto {
   @Length(6, 20)
   password: string;
 }
+
+// 批量创建用户的DTO
+export class CreateUsersDto {
+  @IsNotEmpty()
+  users: CreateUserDto[];
+}

@@ -3,6 +3,7 @@ import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { PageOptionsDto } from './dto/page-customer.dto';
+import { BatchCreateCustomerDto } from './dto/batch-create.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @UseInterceptors(ClassSerializerInterceptor)
@@ -45,5 +46,12 @@ export class CustomerController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.customerService.remove(id);
+  }
+
+  @Post('batch-create')
+  async batchCreateFromExternalContacts(@Body() batchCreateDto: BatchCreateCustomerDto) {
+    return this.customerService.batchCreateFromExternalContacts(
+      batchCreateDto.useridList
+    );
   }
 } 

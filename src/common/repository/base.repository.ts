@@ -27,12 +27,16 @@ export class BaseRepository<T extends BaseEntity> {
     return this.repository.findOne({ where: { id } as unknown as FindOptionsWhere<T> });
   }
 
-  async update(id: number, data: DeepPartial<T>): Promise<UpdateResult> {
+  async update(id: number, data: DeepPartial<T>): Promise<T> {
     const entity = await this.findOne(id);
     if (!entity) {
       throw new BusinessException(1001, '记录不存在');
     }
-    return this.repository.update(id, data as any);
+    
+    // 使用Object.assign更新实体，TypeORM会自动过滤不存在的字段
+    Object.assign(entity, data);
+    
+    return this.repository.save(entity);
   }
 
   async remove(id: number): Promise<T> {
