@@ -15,7 +15,7 @@ export class UserService {
   private readonly userRepository: BaseRepository<User>;
 
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: any) {
     return this.userRepository.create(createUserDto);
   }
 

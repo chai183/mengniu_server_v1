@@ -13,7 +13,7 @@ export class UserController {
 
   @Post()
   // @UseGuards(JwtAuthGuard)
-  create(@Body() createUserDto: CreateUserDto) {
+  create(@Body() createUserDto: any) {
     return this.userService.create(createUserDto);
   }
 

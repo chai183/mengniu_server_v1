@@ -41,10 +41,10 @@ import { GoodModule } from './good/good.module';
     // }),
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: process.env.DB_HOST ?? '114.55.139.10',
+      host: process.env.DB_HOST ?? 'rm-bp1h1uj8tk619834plo.mysql.rds.aliyuncs.com',
       port: parseInt(process.env.DB_PORT ?? '3306'),
-      username: process.env.DB_USERNAME ?? 'root',
-      password: process.env.DB_PASSWORD ?? '123456',
+      username: process.env.DB_USERNAME ?? 'dms_user_ea9646c',
+      password: process.env.DB_PASSWORD ?? 'Chai826300474',
       database: process.env.DB_DATABASE ?? 'db_template',
       entities: [User, Customer, FollowUp, Corp, Good],
       synchronize: true,

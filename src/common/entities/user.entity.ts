@@ -53,12 +53,75 @@ export class BaseEntity {
 @Entity()
 export class User extends BaseEntity {
 
-  @Column()
+  @Column({ nullable: true })
   account: string;
 
   @Exclude()
-  @Column()
+  @Column({ nullable: true })
   password: string;
+
+  @Column({ nullable: true })
+  userid: string;
+
+  @Column({ nullable: true })
+  name: string;
+
+  @Column('simple-array', { nullable: true })
+  department: number[];
+
+  @Column('simple-array', { nullable: true })
+  order: number[];
+
+  @Column({ nullable: true })
+  position: string;
+
+  @Column({ nullable: true })
+  mobile: string;
+
+  @Column({ nullable: true })
+  gender: string;
+
+  @Column({ nullable: true })
+  email: string;
+
+  @Column({ nullable: true })
+  biz_mail: string;
+
+  @Column('simple-array', { nullable: true })
+  is_leader_in_dept: number[];
+
+  @Column('simple-array', { nullable: true })
+  direct_leader: string[];
+
+  @Column({ nullable: true })
+  avatar: string;
+
+  @Column({ nullable: true })
+  thumb_avatar: string;
+
+  @Column({ nullable: true })
+  telephone: string;
+
+  @Column({ nullable: true })
+  alias: string;
+
+  @Column({ default: 1 })
+  status: number;
+
+  @Column({ nullable: true })
+  address: string;
+
+  @Column({ nullable: true })
+  english_name: string;
+
+  @Column({ nullable: true })
+  open_userid: string;
+
+  @Column({ nullable: true })
+  main_department: number;
+
+  @Column({ nullable: true })
+  qr_code: string;
 
   @BeforeInsert()
   @BeforeUpdate()
