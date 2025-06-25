@@ -116,8 +116,6 @@ export class CustomerService {
   @InjectBaseRepository(Customer)
   private readonly customerRepository: BaseRepository<Customer>;
 
-  constructor(private readonly wechatService: WechatService) {}
-
   async create(createCustomerDto: CreateCustomerDto) {
     return this.customerRepository.create(createCustomerDto);
   }
@@ -173,11 +171,8 @@ export class CustomerService {
    * @param limit 每页返回的最大记录数，默认100
    * @returns 批量添加结果
    */
-  async batchCreateFromExternalContacts(useridList: string[]) {
-    try {
-      // 获取所有外部联系人数据
-      const externalContacts = await this.wechatService.getAllExternalContacts(useridList);
-      
+  async batchCreateFromExternalContacts(externalContacts: any[]) {
+    try {      
       if (!externalContacts || externalContacts.length === 0) {
         return {
           success: true,

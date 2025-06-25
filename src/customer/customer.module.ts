@@ -7,7 +7,7 @@ import { BaseRepositoryModule } from '../common/modules/base.repository.module';
 import { WechatModule } from '../wechat/wechat.module';
 
 @Module({
-  imports: [BaseRepositoryModule.forFeature([Customer]), WechatModule],
+  imports: [BaseRepositoryModule.forFeature([Customer])],
   controllers: [CustomerController],
   providers: [CustomerService],
   exports: [CustomerService],

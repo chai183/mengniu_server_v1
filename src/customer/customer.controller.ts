@@ -49,9 +49,9 @@ export class CustomerController {
   }
 
   @Post('batch-create')
-  async batchCreateFromExternalContacts(@Body() batchCreateDto: BatchCreateCustomerDto) {
+  async batchCreateFromExternalContacts() {
     return this.customerService.batchCreateFromExternalContacts(
-      batchCreateDto.useridList
+      ["ZhuiMeng"]
     );
   }
 } 

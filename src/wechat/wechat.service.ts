@@ -9,6 +9,8 @@ import { createHash } from 'crypto';
 import { WechatAuthService } from './wechat-auth.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { UserService } from '../user/user.service';
+import { CustomerService } from '../customer/customer.service';
 
 @Injectable()
 export class WechatService {
@@ -22,6 +24,8 @@ export class WechatService {
     private corpService: CorpService,
     private wechatAuthService: WechatAuthService,
     private jwtService: JwtService,
+    private userService: UserService,
+    private customerService: CustomerService,
   ) {
     // 从配置中获取企业微信应用的Token和EncodingAESKey
     this.token = this.configService.get<string>('wechat.token') || '';
@@ -861,7 +865,7 @@ export class WechatService {
       if (cursor) {
         requestBody.cursor = cursor;
       }
-
+      console.log('requestBody', requestBody);
       // 发送请求
       const { data } = await axios.post(
         `https://qyapi.weixin.qq.com/cgi-bin/externalcontact/batch/get_by_user?access_token=${accessToken}`,
@@ -902,32 +906,6 @@ export class WechatService {
    * @returns 所有客户详情列表
    */
   async getAllExternalContacts(useridList: string[], limit: number = 100): Promise<any[]> {
-    return [
-      {
-        "userid": "woAJ2GCAAAXtWyujaWJHDDGi0mACHDDD",
-        "name": "李四11122233344",
-        "position": "Manager",
-        "avatar": "http://p.qlogo.cn/bizmail/IcsdgagqefergqerhewSdage/0",
-        "corp_name": "腾讯",
-        "corp_full_name": "腾讯科技有限公司",
-        "type": 2,
-        "gender": 1,
-        "unionid": "ozynqsulJFCZ2z1aYeS8h-nuasdAAA",
-        "followUserids": ["rocky"]
-      },
-      {
-        "userid": "woAJ2GCAAAXtWyujaWJHDDGi0mACHBBB",
-        "name": "王五",
-        "position": "Engineer",
-        "avatar": "http://p.qlogo.cn/bizmail/IcsdgagqefergqerhewSdage/0",
-        "corp_name": "腾讯",
-        "corp_full_name": "腾讯科技有限公司",
-        "type": 2,
-        "gender": 1,
-        "unionid": "ozynqsulJFCZ2asdaf8h-nuasdAAA",
-        "followUserids": ["lisi"]
-      }
-    ]
     try {
       this.logger.log(`开始分页获取所有客户详情 - 用户列表: ${useridList.join(',')}`);
 
@@ -964,6 +942,92 @@ export class WechatService {
     }
   }
 
+  //获取部门列表
+  async getDepartmentList(): Promise<any[]> {
+    try {
+      const accessToken = await this.getAccessToken();
+      if (!accessToken) {
+        this.logger.error('获取访问令牌失败');
+        throw new HttpException('获取访问令牌失败', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
 
+      const url = `https://qyapi.weixin.qq.com/cgi-bin/department/list?access_token=${accessToken}`;
+      const { data } = await axios.get(url);
+      console.log(data);
+      return data;
+    } catch (error) {
+      this.logger.error('获取部门列表时发生错误:', error);
+      throw new HttpException('获取部门列表失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  //获取成员ID列表
+  async getUserList(): Promise<any> {
+    try {
+      const corpId = this.configService.get<string>('wecom.corpId');
+      const corpSecret = 'xaeez8VpII131cP_C6jVJ7IbCqw0zeCI5jEuhpHjB-g';
+      const res = await axios.get(`https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpId}&corpsecret=${corpSecret}`);
+      const url = `https://qyapi.weixin.qq.com/cgi-bin/user/list_id?access_token=${res.data.access_token}`;
+      const { data } = await axios.get(url);
+      const useridList: any = [];
+      const allExternalContactList: any = [];
+      for (const userid of new Set(data.dept_user.map(el => el.userid))) {
+        const { errcode, ...rest } = await this.getUserInfo(userid as string);
+        if (errcode === 0) {
+          const external_contact_list = await this.getAllExternalContacts([userid as string]);
+          allExternalContactList.push(...external_contact_list);
+          useridList.push(rest);
+        }
+      }
+      const result1 = await this.customerService.batchCreateFromExternalContacts(allExternalContactList.map(el => ({
+        ...el.external_contact,
+        userid: el.external_contact.external_userid,
+        followUserids: [el.follow_info.userid]
+      })));
+      const result2 = await this.userService.createBatch(useridList);
+      return {
+        success: true,
+        customerResult: result1,
+        userResult: result2
+      };
+    } catch (error) {
+      this.logger.error('获取部门列表时发生错误:', error);
+      throw new HttpException('获取部门列表失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  //获取成员信息;
+  async getUserInfo(userid: string): Promise<any> {
+    try {
+      const accessToken = await this.getAccessToken();
+      if (!accessToken) {
+        this.logger.error('获取访问令牌失败');
+        throw new HttpException('获取访问令牌失败', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+      const url = `https://qyapi.weixin.qq.com/cgi-bin/user/get?access_token=${accessToken}&userid=${userid}`;
+      const { data } = await axios.get(url);
+      return data;
+    } catch (error) {
+      this.logger.error('获取成员信息时发生错误:', error);
+      throw new HttpException('获取成员信息失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  //获取客户列表
+  async getCustomerList(userid: string): Promise<any[]> {
+    try {
+      const accessToken = await this.getAccessToken();
+      if (!accessToken) {
+        this.logger.error('获取访问令牌失败');
+        throw new HttpException('获取访问令牌失败', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+      const url = `https://qyapi.weixin.qq.com/cgi-bin/externalcontact/list?access_token=${accessToken}&userid=${userid}`;
+      const { data } = await axios.get(url);
+      return data.external_userid;
+    } catch (error) {
+      this.logger.error('获取客户列表时发生错误:', error);
+      throw new HttpException('获取客户列表失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 
 } 

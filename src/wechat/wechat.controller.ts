@@ -413,4 +413,20 @@ export class WechatController {
   ) {
     return this.wechatService.getAgentJssdkConfig(corpId, decodeURIComponent(url));
   }
+
+  /**
+   * 获取部门列表
+   */
+  @Get('getDepartmentList')
+  async getDepartmentList() {
+    return this.wechatService.getDepartmentList();
+  }
+
+  /**
+   * 获取成员ID列表
+   */
+  @Get('getUserList')
+  async getUserList() {
+    return this.wechatService.getUserList();
+  }
 } 
