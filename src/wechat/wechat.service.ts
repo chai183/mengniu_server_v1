@@ -769,13 +769,14 @@ export class WechatService {
    */
   async login(code: string): Promise<any> {
     // const { userid } = await this.jscode2session(code);
-    const userid = 'wo6dU_RAAAh8HJKxN4dRp2jxSiipLf1Q';
+    // console.log(userid);
+    const userid = 'CZY';
 
     const token = this.jwtService.sign({ userid }, {
       expiresIn: '3650d'
     });
 
-    return { token };
+    return { token, userid };
   }
 
   /**
@@ -865,7 +866,6 @@ export class WechatService {
       if (cursor) {
         requestBody.cursor = cursor;
       }
-      console.log('requestBody', requestBody);
       // 发送请求
       const { data } = await axios.post(
         `https://qyapi.weixin.qq.com/cgi-bin/externalcontact/batch/get_by_user?access_token=${accessToken}`,
@@ -969,22 +969,21 @@ export class WechatService {
       const res = await axios.get(`https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpId}&corpsecret=${corpSecret}`);
       const url = `https://qyapi.weixin.qq.com/cgi-bin/user/list_id?access_token=${res.data.access_token}`;
       const { data } = await axios.get(url);
-      const useridList: any = [];
-      const allExternalContactList: any = [];
-      for (const userid of new Set(data.dept_user.map(el => el.userid))) {
+      const userList: any = [];
+      const userids = new Set(data.dept_user.map(el => el.userid));
+      for (const userid of userids) {
         const { errcode, ...rest } = await this.getUserInfo(userid as string);
         if (errcode === 0) {
-          const external_contact_list = await this.getAllExternalContacts([userid as string]);
-          allExternalContactList.push(...external_contact_list);
-          useridList.push(rest);
+          userList.push(rest);
         }
       }
-      const result1 = await this.customerService.batchCreateFromExternalContacts(allExternalContactList.map(el => ({
+      const external_contact_list = await this.getAllExternalContacts(Array.from(userids) as string[]);
+      const result1 = await this.customerService.batchCreateFromExternalContacts(external_contact_list.map(el => ({
         ...el.external_contact,
         userid: el.external_contact.external_userid,
         followUserids: [el.follow_info.userid]
       })));
-      const result2 = await this.userService.createBatch(useridList);
+      const result2 = await this.userService.createBatch(userList);
       return {
         success: true,
         customerResult: result1,

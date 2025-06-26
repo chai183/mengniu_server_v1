@@ -220,8 +220,8 @@ export class CustomerService {
         totalCount: externalContacts.length,
         createdCount,
         updatedCount,
-        createdCustomers,
-        updatedCustomers
+        // createdCustomers,
+        // updatedCustomers
       };
 
     } catch (error) {
