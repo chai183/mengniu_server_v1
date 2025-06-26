@@ -23,7 +23,7 @@ export class FollowUpService {
   }
 
   async findAllPage(query: any) {
-    return this.followUpRepository.findAllPage(query);
+    return this.followUpRepository.findAllPage(query, { relations: ['customer'] });
   }
 
   async findByCustomerId(customerId: number, type: number): Promise<FollowUp[]> {

@@ -48,7 +48,7 @@ export class BaseRepository<T extends BaseEntity> {
     return this.repository.save(entity);
   }
 
-  async findAllPage(query: any) {
+  async findAllPage(query: any, { relations }: { relations?: string[] } = {}) {
     const { page, limit, createTime, updateTime, ...rest } = query;
 
     const where: any = { isDeleted: false, ...rest };
@@ -94,7 +94,8 @@ export class BaseRepository<T extends BaseEntity> {
       where,
       order: {
         createTime: 'DESC'
-      } as unknown as FindOptionsOrder<T>
+      } as unknown as FindOptionsOrder<T>,
+      relations: relations
     });
 
     return {
