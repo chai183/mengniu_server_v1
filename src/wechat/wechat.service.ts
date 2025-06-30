@@ -1090,32 +1090,24 @@ export class WechatService {
         this.logger.error('获取访问令牌失败');
         throw new HttpException('获取访问令牌失败', HttpStatus.INTERNAL_SERVER_ERROR);
       }
-      console.log('获取导出结果1');
       // 发送获取结果请求
       const { data } = await axios.get(
         `https://qyapi.weixin.qq.com/cgi-bin/export/get_result?access_token=${accessToken}&jobid=${jobid}`
       );
-      // const data = {
-      //   "errcode": 0,
-      //   "errmsg": "ok",
-      //   "status": 2,
-      //   "data_list": [
-      //     {
-      //       "url": "https://szfront.wxwork.qq.com:443/downloadobject?fileid=080112043133303122093731373030323630372a0131322432646539646330392d386238662d343630302d623734352d63363235343934336661616338a03a421475c9afbd790707207506bfa9e6eb3eee49e0633648015802600768b8177207333030303030308a0100900193c889c3069a0100a001bc9d02&weixinnum=1982191027&authkey=7008001001186022601516628ec324ee6b9c96fb7e464a01af4df4ac6b97f6d75399ca2802ef2ca0ff0d929a4a251d67cc97eca12d193a99e95a07fb91211be5d3e3ebd1a82dcf28292d019b1ed8189c50ec6b12254d2410abf710dacd69c21d8b7226c849659a9539&filename=data_0.json",
-      //       "size": 7456,
-      //       "md5": "f2d56541a5950c376c1c880508707e16"
-      //     }
-      //   ]
-      // }
-      console.log(data);
       const url = data.data_list[0].url;
       const { data: data2 } = await axios.get(url, {
         responseType: 'arraybuffer'
       });
       const decryptedData = await this.decryptExportData(Buffer.from(data2));
 
-      const res = await this.userService.createBatch(decryptedData.userlist);
-      console.log(res);
+      const userResult = await this.userService.createBatch(decryptedData.userlist);
+
+      const external_contact_list = await this.getAllExternalContacts(decryptedData.userlist.map(el => el.userid));
+      const customerResult = await this.customerService.batchCreateFromExternalContacts(external_contact_list.map(el => ({
+        ...el.external_contact,
+        userid: el.external_contact.external_userid,
+        followUserids: [el.follow_info.userid]
+      })));
 
       if (data.errcode !== 0) {
         this.logger.error(`获取导出结果失败: ${data.errmsg}`);
@@ -1123,7 +1115,11 @@ export class WechatService {
       }
 
       this.logger.log(`成功获取导出结果 - 任务ID: ${jobid}, 状态: ${data.status}`);
-      return data;
+      return {
+        success: true,
+        customerResult,
+        userResult
+      };
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
