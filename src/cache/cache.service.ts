@@ -7,7 +7,7 @@ import { createKeyv as createKeyvRedis } from '@keyv/redis';
 @Injectable()
 export class CacheService {
   private readonly logger = new Logger(CacheService.name);
-  private readonly cacheManager = createKeyvRedis(`redis://${process.env.DB_HOST ?? '114.55.139.10'}:6379`);
+  private readonly cacheManager = createKeyvRedis(`redis://114.55.139.10:6379`);
   
   /**
    * 设置缓存
