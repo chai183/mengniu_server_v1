@@ -5,7 +5,7 @@ import * as xml2js from 'xml2js';
 import { CacheService } from '../cache/cache.service';
 import axios from 'axios';
 import { CorpService } from '../corp/corp.service';
-import { createHash } from 'crypto';
+import { createHash, createDecipheriv } from 'crypto';
 import { WechatAuthService } from './wechat-auth.service';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -1081,7 +1081,6 @@ export class WechatService {
    * @returns 导出结果信息
    */
   async getExportResult(jobid: string): Promise<any> {
-    console.log(jobid);
     try {
       this.logger.log(`获取导出结果 - 任务ID: ${jobid}`);
 
@@ -1093,9 +1092,30 @@ export class WechatService {
       }
 
       // 发送获取结果请求
-      const { data } = await axios.get(
-        `https://qyapi.weixin.qq.com/cgi-bin/export/get_result?access_token=${accessToken}&jobid=${jobid}`
-      );
+      // const { data } = await axios.get(
+      //   `https://qyapi.weixin.qq.com/cgi-bin/export/get_result?access_token=${accessToken}&jobid=${jobid}`
+      // );
+      const data = {
+        "errcode": 0,
+        "errmsg": "ok",
+        "status": 2,
+        "data_list": [
+          {
+            "url": "https://szfront.wxwork.qq.com:443/downloadobject?fileid=080112043133303122093731373030323630372a0131322432646539646330392d386238662d343630302d623734352d63363235343934336661616338a03a421475c9afbd790707207506bfa9e6eb3eee49e0633648015802600768b8177207333030303030308a0100900193c889c3069a0100a001bc9d02&weixinnum=1982191027&authkey=7008001001186022601516628ec324ee6b9c96fb7e464a01af4df4ac6b97f6d75399ca2802ef2ca0ff0d929a4a251d67cc97eca12d193a99e95a07fb91211be5d3e3ebd1a82dcf28292d019b1ed8189c50ec6b12254d2410abf710dacd69c21d8b7226c849659a9539&filename=data_0.json",
+            "size": 7456,
+            "md5": "f2d56541a5950c376c1c880508707e16"
+          }
+        ]
+      }
+
+      const url = data.data_list[0].url;
+      const { data: data2 } = await axios.get(url, {
+        responseType: 'arraybuffer'
+      });
+      const decryptedData = await this.decryptExportData(Buffer.from(data2));
+
+      const res = await this.userService.createBatch(decryptedData.userlist);
+      console.log(res);
 
       if (data.errcode !== 0) {
         this.logger.error(`获取导出结果失败: ${data.errmsg}`);
@@ -1110,6 +1130,53 @@ export class WechatService {
       }
       this.logger.error('获取导出结果时发生错误:', error);
       throw new HttpException('获取导出结果失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    
+  }
+
+  /**
+   * 解密企业微信导出的数据
+   * @param encryptedData 加密的字节数据
+   * @returns 解密后的数据
+   */
+  async decryptExportData(encryptedData: Buffer): Promise<any> {
+    try {
+      this.logger.log('开始解密企业微信导出数据');
+
+      // 获取配置中的encodingAESKey
+      const encodingAESKey = this.configService.get<string>('wechat.encodingAesKey');
+      if (!encodingAESKey) {
+        throw new HttpException('未配置encodingAESKey', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      // 获取 key - 需要加上 = 进行Base64解码
+      const keyWithPadding = encodingAESKey + '=';
+      const aesKey = Buffer.from(keyWithPadding, 'base64');
+      
+      if (aesKey.length !== 32) {
+        throw new HttpException('AESKey长度不正确', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      // 获取 iv - 使用密钥的前16字节
+      const iv = aesKey.slice(0, 16);
+
+      // 使用crypto模块进行AES-256-CBC解密，不填充
+      const decipher = createDecipheriv('aes-256-cbc', aesKey, iv);
+      decipher.setAutoPadding(false);
+
+      // 解密数据
+      let decrypted = decipher.update(encryptedData, undefined, 'utf8');
+      decrypted += decipher.final('utf8');
+
+      // 移除PKCS7填充
+      const paddingLength = decrypted.charCodeAt(decrypted.length - 1);
+      if (paddingLength > 0 && paddingLength <= 16) {
+        decrypted = decrypted.slice(0, -paddingLength);
+      }
+      return JSON.parse(decrypted);
+    } catch (error) {
+      this.logger.error('解密企业微信导出数据时发生错误:', error);
+      throw new HttpException('解密数据失败', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
