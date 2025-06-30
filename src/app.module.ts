@@ -26,29 +26,16 @@ import { AppScheduleModule } from './schedule/schedule.module';
       load: [configuration],
       isGlobal: true,
     }),
-    // TypeOrmModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   inject: [ConfigService],
-    //   useFactory: (config: ConfigService) => {
-    //     return {
-    //       type: 'mysql',
-    //       // entities: [`${__dirname}/**/*.entity{.ts,.js}`],
-    //       // autoLoadEntities: true,
-    //       // keepConnectionAlive: true,
-    //       // timezone: '+08:00',
-    //       ...config.get('db.mysql'),
-    //     } as TypeOrmModuleOptions;
-    //   },
-    // }),
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.DB_HOST ?? 'rm-bp1h1uj8tk619834plo.mysql.rds.aliyuncs.com',
-      port: parseInt(process.env.DB_PORT ?? '3306'),
-      username: process.env.DB_USERNAME ?? 'dms_user_ea9646c',
-      password: process.env.DB_PASSWORD ?? 'Chai826300474',
-      database: process.env.DB_DATABASE ?? 'db_template',
-      entities: [User, Customer, FollowUp, Corp, Good],
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        return {
+          type: 'mysql',
+          ...config.get('db.mysql'),
+          entities: [User, Customer, FollowUp, Corp, Good],
+        } as TypeOrmModuleOptions;
+      },
     }),
     JwtModule.registerAsync({
       global: true,

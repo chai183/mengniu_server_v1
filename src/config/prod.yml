@@ -28,10 +28,10 @@ cos:
 # 数据库配置
 db:
   mysql:
-    host: 'localhost'
+    host: 'rm-bp1h1uj8tk619834plo.mysql.rds.aliyuncs.com'
     port: 3306
-    username: 'root'
-    password: '123456'
+    username: 'dms_user_ea9646c'
+    password: 'Chai826300474'
     database: 'db_template'
     synchronize: true
     # charset: 'utf8mb4'
