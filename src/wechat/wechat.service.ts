@@ -1115,6 +1115,7 @@ export class WechatService {
       }
 
       this.logger.log(`成功获取导出结果 - 任务ID: ${jobid}, 状态: ${data.status}`);
+      console.log(customerResult, userResult);
       return {
         success: true,
         customerResult,
