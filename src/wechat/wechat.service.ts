@@ -1031,4 +1031,86 @@ export class WechatService {
     }
   }
 
+  /**
+   * 导出成员
+   * @param encodingAesKey Base64编码后的加密密钥，长度固定为43
+   * @param blockSize 每块数据的人员数，支持范围[104,106]，默认值为106
+   * @returns 导出任务ID
+   */
+  async exportSimpleUser(): Promise<string> {
+    try {
+      this.logger.log('开始导出成员数据');
+
+      // 获取访问令牌
+      const accessToken = await this.getAccessToken();
+      if (!accessToken) {
+        this.logger.error('获取访问令牌失败');
+        throw new HttpException('获取访问令牌失败', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      // 构建请求体
+      const requestBody = {
+        encoding_aeskey: this.configService.get<string>('wechat.encodingAesKey')
+      };
+
+      // 发送导出请求
+      const { data } = await axios.post(
+        `https://qyapi.weixin.qq.com/cgi-bin/export/user?access_token=${accessToken}`,
+        requestBody
+      );
+
+      if (data.errcode !== 0) {
+        this.logger.error(`导出成员失败: ${data.errmsg}`);
+        throw new HttpException(`导出成员失败: ${data.errmsg}`, HttpStatus.BAD_REQUEST);
+      }
+
+      this.logger.log(`导出成员任务创建成功，任务ID: ${data.jobid}`);
+      return data.jobid;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('导出成员时发生错误:', error);
+      throw new HttpException('导出成员失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /**
+   * 获取导出结果
+   * @param jobid 导出任务ID
+   * @returns 导出结果信息
+   */
+  async getExportResult(jobid: string): Promise<any> {
+    console.log(jobid);
+    try {
+      this.logger.log(`获取导出结果 - 任务ID: ${jobid}`);
+
+      // 获取访问令牌
+      const accessToken = await this.getAccessToken();
+      if (!accessToken) {
+        this.logger.error('获取访问令牌失败');
+        throw new HttpException('获取访问令牌失败', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      // 发送获取结果请求
+      const { data } = await axios.get(
+        `https://qyapi.weixin.qq.com/cgi-bin/export/get_result?access_token=${accessToken}&jobid=${jobid}`
+      );
+
+      if (data.errcode !== 0) {
+        this.logger.error(`获取导出结果失败: ${data.errmsg}`);
+        throw new HttpException(`获取导出结果失败: ${data.errmsg}`, HttpStatus.BAD_REQUEST);
+      }
+
+      this.logger.log(`成功获取导出结果 - 任务ID: ${jobid}, 状态: ${data.status}`);
+      return data;
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error('获取导出结果时发生错误:', error);
+      throw new HttpException('获取导出结果失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
 } 

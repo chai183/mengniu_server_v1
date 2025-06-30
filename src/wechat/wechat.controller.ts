@@ -24,7 +24,7 @@ export class WechatController {
   async login(@Body() body: { code: string }) {
     return this.wechatService.login(body.code);
   }
-  
+
   /**
    * 数据回调URL验证 - GET请求
    * 用于验证回调URL的有效性
@@ -232,7 +232,7 @@ export class WechatController {
    */
   private async handleEvent(callbackData: any): Promise<void> {
     try {
-      const { Event, EventKey } = callbackData.xml;
+      const { Event, EventKey, BatchJob } = callbackData.xml;
 
       switch (Event) {
         case 'enter_agent':
@@ -246,6 +246,11 @@ export class WechatController {
           break;
         case 'unsubscribe':
           this.logger.log('用户取消关注事件');
+          break;
+        case 'batch_job_result':
+          const result = await this.wechatService.getExportResult(BatchJob.JobId);
+          this.logger.log(result);
+          // this.logger.log('用户取消关注事件');
           break;
         default:
           this.logger.log(`未处理的事件类型: ${Event}`);
@@ -428,5 +433,22 @@ export class WechatController {
   @Get('getUserList')
   async getUserList() {
     return this.wechatService.getUserList();
+  }
+
+
+  /**
+   * 导出成员
+   */
+  @Get('exportMembers')
+  async exportMembers() {
+    return this.wechatService.exportSimpleUser();
+  }
+
+  /**
+   * 获取导出结果
+   */
+  @Get('getExportResult')
+  async getExportResult(@Query('jobid') jobid: string) {
+    return this.wechatService.getExportResult(jobid);
   }
 } 
