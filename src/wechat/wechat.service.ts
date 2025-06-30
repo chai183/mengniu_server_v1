@@ -1092,21 +1092,21 @@ export class WechatService {
       }
 
       // 发送获取结果请求
-      // const { data } = await axios.get(
-      //   `https://qyapi.weixin.qq.com/cgi-bin/export/get_result?access_token=${accessToken}&jobid=${jobid}`
-      // );
-      const data = {
-        "errcode": 0,
-        "errmsg": "ok",
-        "status": 2,
-        "data_list": [
-          {
-            "url": "https://szfront.wxwork.qq.com:443/downloadobject?fileid=080112043133303122093731373030323630372a0131322432646539646330392d386238662d343630302d623734352d63363235343934336661616338a03a421475c9afbd790707207506bfa9e6eb3eee49e0633648015802600768b8177207333030303030308a0100900193c889c3069a0100a001bc9d02&weixinnum=1982191027&authkey=7008001001186022601516628ec324ee6b9c96fb7e464a01af4df4ac6b97f6d75399ca2802ef2ca0ff0d929a4a251d67cc97eca12d193a99e95a07fb91211be5d3e3ebd1a82dcf28292d019b1ed8189c50ec6b12254d2410abf710dacd69c21d8b7226c849659a9539&filename=data_0.json",
-            "size": 7456,
-            "md5": "f2d56541a5950c376c1c880508707e16"
-          }
-        ]
-      }
+      const { data } = await axios.get(
+        `https://qyapi.weixin.qq.com/cgi-bin/export/get_result?access_token=${accessToken}&jobid=${jobid}`
+      );
+      // const data = {
+      //   "errcode": 0,
+      //   "errmsg": "ok",
+      //   "status": 2,
+      //   "data_list": [
+      //     {
+      //       "url": "https://szfront.wxwork.qq.com:443/downloadobject?fileid=080112043133303122093731373030323630372a0131322432646539646330392d386238662d343630302d623734352d63363235343934336661616338a03a421475c9afbd790707207506bfa9e6eb3eee49e0633648015802600768b8177207333030303030308a0100900193c889c3069a0100a001bc9d02&weixinnum=1982191027&authkey=7008001001186022601516628ec324ee6b9c96fb7e464a01af4df4ac6b97f6d75399ca2802ef2ca0ff0d929a4a251d67cc97eca12d193a99e95a07fb91211be5d3e3ebd1a82dcf28292d019b1ed8189c50ec6b12254d2410abf710dacd69c21d8b7226c849659a9539&filename=data_0.json",
+      //       "size": 7456,
+      //       "md5": "f2d56541a5950c376c1c880508707e16"
+      //     }
+      //   ]
+      // }
 
       const url = data.data_list[0].url;
       const { data: data2 } = await axios.get(url, {
