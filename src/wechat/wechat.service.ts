@@ -964,9 +964,11 @@ export class WechatService {
   //获取成员ID列表
   async getUserList(): Promise<any> {
     try {
+      console.log('getUserList');
       const corpId = this.configService.get<string>('wecom.corpId');
       const corpSecret = 'xaeez8VpII131cP_C6jVJ7IbCqw0zeCI5jEuhpHjB-g';
       const res = await axios.get(`https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpId}&corpsecret=${corpSecret}`);
+      console.log(res.data);
       const url = `https://qyapi.weixin.qq.com/cgi-bin/user/list_id?access_token=${res.data.access_token}`;
       const { data } = await axios.get(url);
       const userList: any = [];
