@@ -1090,7 +1090,7 @@ export class WechatService {
         this.logger.error('获取访问令牌失败');
         throw new HttpException('获取访问令牌失败', HttpStatus.INTERNAL_SERVER_ERROR);
       }
-
+      console.log('获取导出结果1');
       // 发送获取结果请求
       const { data } = await axios.get(
         `https://qyapi.weixin.qq.com/cgi-bin/export/get_result?access_token=${accessToken}&jobid=${jobid}`
@@ -1107,7 +1107,7 @@ export class WechatService {
       //     }
       //   ]
       // }
-
+      console.log(data);
       const url = data.data_list[0].url;
       const { data: data2 } = await axios.get(url, {
         responseType: 'arraybuffer'
