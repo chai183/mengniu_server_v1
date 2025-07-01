@@ -18,8 +18,13 @@ services:
       - PM2_INSTANCES=max
       # PM2配置 - 内存限制
       - PM2_MAX_MEMORY_RESTART=1G
+      # 时区设置
+      - TZ=Asia/Shanghai
     restart: always
     # 为PM2日志创建数据卷
     volumes:
       - /root/.pm2/logs:/root/.pm2/logs
       - /var/www/static:/static
+      # 同步宿主时间
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
