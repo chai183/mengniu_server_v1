@@ -50,12 +50,12 @@ export class ScheduleController {
           description: '每小时执行一次企业微信数据导出',
           nextRun: this.getNextHourlyRun(),
         },
-        {
-          name: '每日导出任务',
-          cron: '0 2 * * *',
-          description: '每天凌晨2点执行一次完整导出',
-          nextRun: this.getNextDailyRun(),
-        },
+        // {
+        //   name: '每日导出任务',
+        //   cron: '0 2 * * *',
+        //   description: '每天凌晨2点执行一次完整导出',
+        //   nextRun: this.getNextDailyRun(),
+        // },
       ],
       timestamp: new Date().toISOString(),
     };

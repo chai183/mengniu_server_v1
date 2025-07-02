@@ -37,26 +37,26 @@ export class ScheduleService {
   /**
    * 每天凌晨2点执行一次完整导出任务
    */
-  @Cron('0 2 * * *')
-  async handleDailyExport() {
-    if (this.isProcessing) {
-      this.logger.warn('上一个导出任务还在执行中，跳过本次每日任务');
-      return;
-    }
+  // @Cron('0 2 * * *')
+  // async handleDailyExport() {
+  //   if (this.isProcessing) {
+  //     this.logger.warn('上一个导出任务还在执行中，跳过本次每日任务');
+  //     return;
+  //   }
 
-    this.logger.log('开始执行每日导出任务');
-    this.isProcessing = true;
+  //   this.logger.log('开始执行每日导出任务');
+  //   this.isProcessing = true;
     
-    try {
-      // 创建导出任务
-      const jobId = await this.wechatService.exportSimpleUser();
-      this.logger.log(`每日导出任务创建成功，任务ID: ${jobId}`);
-    } catch (error) {
-      this.logger.error('创建每日导出任务失败', error);
-    } finally {
-      this.isProcessing = false;
-    }
-  }
+  //   try {
+  //     // 创建导出任务
+  //     const jobId = await this.wechatService.exportSimpleUser();
+  //     this.logger.log(`每日导出任务创建成功，任务ID: ${jobId}`);
+  //   } catch (error) {
+  //     this.logger.error('创建每日导出任务失败', error);
+  //   } finally {
+  //     this.isProcessing = false;
+  //   }
+  // }
 
   /**
    * 手动触发导出任务（用于测试）
