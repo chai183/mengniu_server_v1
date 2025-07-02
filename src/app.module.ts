@@ -16,7 +16,6 @@ import { MemoryCacheModule } from './cache/cache.module';
 import { CorpModule } from './corp/corp.module';
 import { UploadModule } from './upload/upload.module';
 import { GoodModule } from './good/good.module';
-import { AppScheduleModule } from './schedule/schedule.module';
 
 @Module({
   imports: [
@@ -55,7 +54,6 @@ import { AppScheduleModule } from './schedule/schedule.module';
     CorpModule,
     UploadModule,
     GoodModule,
-    AppScheduleModule,
   ],
   providers: [
     JwtStrategy,
