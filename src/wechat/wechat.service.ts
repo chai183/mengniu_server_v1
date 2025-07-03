@@ -768,10 +768,8 @@ export class WechatService {
    * @returns 登录结果
    */
   async login(code: string): Promise<any> {
-    // const { userid } = await this.jscode2session(code);
-    // console.log(userid);
-    const userid = 'CZY';
-
+    const { userid } = await this.jscode2session(code);
+    
     const token = this.jwtService.sign({ userid }, {
       expiresIn: '3650d'
     });
