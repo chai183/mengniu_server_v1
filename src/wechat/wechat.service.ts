@@ -983,7 +983,7 @@ export class WechatService {
         userid: el.external_contact.external_userid,
         followUserids: [el.follow_info.userid],
         mobiles: el.follow_info.mobile,
-        remark: el.follow_info.remark,
+        remark_name: el.follow_info.remark,
         remark_corp_name: el.follow_info.remark_corp_name
       })));
       const result2 = await this.userService.createBatch(userList);
@@ -1107,7 +1107,10 @@ export class WechatService {
       const customerResult = await this.customerService.batchCreateFromExternalContacts(external_contact_list.map(el => ({
         ...el.external_contact,
         userid: el.external_contact.external_userid,
-        followUserids: [el.follow_info.userid]
+        followUserids: [el.follow_info.userid],
+        mobiles: el.follow_info.mobile,
+        remark_name: el.follow_info.remark,
+        remark_corp_name: el.follow_info.remark_corp_name
       })));
 
       if (data.errcode !== 0) {

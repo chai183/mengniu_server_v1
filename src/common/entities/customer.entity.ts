@@ -66,4 +66,13 @@ export class Customer extends BaseEntity {
   @Column('simple-array', { nullable: true })
   @ApiProperty({ description: '跟进人列表' })
   followUserids: string[];
+
+  @Column('simple-array', { nullable: true })
+  mobiles: string[];
+
+  @Column({ nullable: true })
+  remark_name: string;
+
+  @Column({ nullable: true })
+  remark_corp_name: string; 
 } 

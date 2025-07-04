@@ -121,16 +121,7 @@ export class User extends BaseEntity {
   main_department: number;
 
   @Column({ nullable: true })
-  qr_code: string;
-
-  @Column('simple-array', { nullable: true })
-  mobiles: string[];
-
-  @Column({ nullable: true })
-  remark: string;
-
-  @Column({ nullable: true })
-  remark_corp_name: string;  
+  qr_code: string; 
 
   @BeforeInsert()
   @BeforeUpdate()
