@@ -449,4 +449,12 @@ export class WechatController {
   async getExportResult(@Query('jobid') jobid: string) {
     return this.wechatService.getExportResult(jobid);
   }
+
+  /**
+   * 获取所有客户
+   */
+  @Get('getAllExternalContacts')
+  async getAllExternalContacts(@Query('userid') userid: string) {
+    return this.wechatService.getAllExternalContacts([userid]);
+  }
 } 
