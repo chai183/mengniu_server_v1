@@ -769,7 +769,7 @@ export class WechatService {
    */
   async login(code: string): Promise<any> {
     const { userid } = await this.jscode2session(code);
-    
+
     const token = this.jwtService.sign({ userid }, {
       expiresIn: '3650d'
     });
@@ -1100,7 +1100,7 @@ export class WechatService {
         responseType: 'arraybuffer'
       });
       const decryptedData = await this.decryptExportData(Buffer.from(data2));
-
+      console.log('userlist', decryptedData);
       const userResult = await this.userService.createBatch(decryptedData.userlist);
 
       const external_contact_list = await this.getAllExternalContacts(decryptedData.userlist.map(el => el.userid));
@@ -1132,7 +1132,7 @@ export class WechatService {
       this.logger.error('获取导出结果时发生错误:', error);
       throw new HttpException('获取导出结果失败', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    
+
   }
 
   /**
@@ -1153,7 +1153,7 @@ export class WechatService {
       // 获取 key - 需要加上 = 进行Base64解码
       const keyWithPadding = encodingAESKey + '=';
       const aesKey = Buffer.from(keyWithPadding, 'base64');
-      
+
       if (aesKey.length !== 32) {
         throw new HttpException('AESKey长度不正确', HttpStatus.INTERNAL_SERVER_ERROR);
       }
