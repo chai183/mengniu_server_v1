@@ -52,19 +52,24 @@ export class UserService {
     return users.find(user => user.account === account);
   }
 
-  async login(loginUserDto: LoginUserDto) {
-    const user = await this.findByAccount(loginUserDto.account);
-    if (!user) {
-      throw new BusinessException(1001, '账号或密码错误');
-    }
-
-    const isPasswordValid = await user.validatePassword(loginUserDto.password);
-    if (!isPasswordValid) {
-      throw new BusinessException(1001, '账号或密码错误');
-    }
-
-    return user;
+  async findByName(name: string) {
+    const users = await this.userRepository.findAll();
+    return users.find(user => user.name === name);
   }
+
+  // async login(loginUserDto: LoginUserDto) {
+  //   const user = await this.findByName(loginUserDto.name);
+  //   if (!user) {
+  //     throw new BusinessException(1001, '账号不存在');
+  //   }
+
+  //   const isPasswordValid = await user.validatePassword(loginUserDto.password);
+  //   if (!isPasswordValid) {
+  //     throw new BusinessException(1001, '密码错误');
+  //   }
+
+  //   return user;
+  // }
 
   async createBatch(createUserDtos: any[]) {
     try {

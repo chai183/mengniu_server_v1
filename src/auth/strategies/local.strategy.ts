@@ -12,17 +12,16 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(account: string, password: string): Promise<any> {
-    const user = await this.userService.findByAccount(account);
+  async validate(name: string, password: string): Promise<any> {
+    const user = await this.userService.findByName(name);
     if (!user) {
-      throw new UnauthorizedException('账号或密码错误');
+      throw new UnauthorizedException('账号不存在');
     }
 
     const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('账号或密码错误');
+      throw new UnauthorizedException('密码错误');
     }
-
     const { password: _, ...result } = user;
     return result;
   }

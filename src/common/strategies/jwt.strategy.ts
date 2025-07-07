@@ -19,6 +19,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     // payload中包含我们在sign时放入的数据
-    return this.userService.findOne(payload.sub);
+    return this.userService.findOne(payload.userid);
   }
 } 
