@@ -75,4 +75,8 @@ export class Customer extends BaseEntity {
 
   @Column({ nullable: true })
   remark_corp_name: string; 
+
+  @Column({ default: true })
+  isActive: boolean;
+
 } 
