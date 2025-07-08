@@ -959,41 +959,54 @@ export class WechatService {
   }
 
   //获取成员ID列表
-  async getUserList(): Promise<any> {
-    try {
-      const corpId = this.configService.get<string>('wecom.corpId');
-      const corpSecret = 'xaeez8VpII131cP_C6jVJ7IbCqw0zeCI5jEuhpHjB-g';
-      const res = await axios.get(`https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpId}&corpsecret=${corpSecret}`);
-      const url = `https://qyapi.weixin.qq.com/cgi-bin/user/list_id?access_token=${res.data.access_token}`;
-      const { data } = await axios.get(url);
-      const userList: any = [];
-      const userids = new Set(data.dept_user.map(el => el.userid));
-      for (const userid of userids) {
-        const { errcode, ...rest } = await this.getUserInfo(userid as string);
-        if (errcode === 0) {
-          userList.push(rest);
-        }
-      }
-      const external_contact_list = await this.getAllExternalContacts(Array.from(userids) as string[]);
-      const result1 = await this.customerService.batchCreateFromExternalContacts(external_contact_list.map(el => ({
-        ...el.external_contact,
-        userid: el.external_contact.external_userid,
-        followUserids: [el.follow_info.userid],
-        mobiles: el.follow_info.remark_mobiles,
-        name: el.follow_info.remark ?? el.external_contact.name,
-        remark_corp_name: el.follow_info.remark_corp_name
-      })));
-      const result2 = await this.userService.createBatch(userList);
-      return {
-        success: true,
-        customerResult: result1,
-        userResult: result2
-      };
-    } catch (error) {
-      this.logger.error('获取部门列表时发生错误:', error);
-      throw new HttpException('获取部门列表失败', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
+  // async getUserList(): Promise<any> {
+  //   try {
+  //     const corpId = this.configService.get<string>('wecom.corpId');
+  //     const corpSecret = 'xaeez8VpII131cP_C6jVJ7IbCqw0zeCI5jEuhpHjB-g';
+  //     const res = await axios.get(`https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpId}&corpsecret=${corpSecret}`);
+  //     const url = `https://qyapi.weixin.qq.com/cgi-bin/user/list_id?access_token=${res.data.access_token}`;
+  //     const { data } = await axios.get(url);
+  //     const userList: any = [];
+  //     const userids = new Set(data.dept_user.map(el => el.userid));
+  //     for (const userid of userids) {
+  //       const { errcode, ...rest } = await this.getUserInfo(userid as string);
+  //       if (errcode === 0) {
+  //         userList.push(rest);
+  //       }
+  //     }
+  //     const external_contact_list = await this.getAllExternalContacts(Array.from(userids) as string[]);
+  //     const follow_info_map = new Map<string, any>();
+  //     const result1 = await this.customerService.batchCreateFromExternalContacts(external_contact_list.map(el => {
+  //       let follow_info = el.follow_info;
+  //       if (follow_info_map.has(el.external_contact.external_userid)) {
+  //         const current_follow_info = follow_info_map.get(el.external_contact.external_userid).follow_info;
+  //         if (current_follow_info.createtime > follow_info.createtime) {
+  //           follow_info = current_follow_info;
+  //           follow_info_map.set(el.external_contact.external_userid, el);
+  //         }
+  //       } else {
+  //         follow_info_map.set(el.external_contact.external_userid, el);
+  //       }
+  //       return {
+  //         ...el.external_contact,
+  //         userid: el.external_contact.external_userid,
+  //         followUserids: [follow_info.userid],
+  //         mobiles: follow_info.remark_mobiles,
+  //         name: follow_info.remark ?? el.external_contact.name,
+  //         remark_corp_name: follow_info.remark_corp_name
+  //       }
+  //     }));
+  //     const result2 = await this.userService.createBatch(userList);
+  //     return {
+  //       success: true,
+  //       customerResult: result1,
+  //       userResult: result2
+  //     };
+  //   } catch (error) {
+  //     this.logger.error('获取部门列表时发生错误:', error);
+  //     throw new HttpException('获取部门列表失败', HttpStatus.INTERNAL_SERVER_ERROR);
+  //   }
+  // }
 
   //获取成员信息;
   async getUserInfo(userid: string): Promise<any> {
@@ -1100,14 +1113,28 @@ export class WechatService {
       const userResult = await this.userService.createBatch(decryptedData.userlist);
 
       const external_contact_list = await this.getAllExternalContacts(decryptedData.userlist.map(el => el.userid));
-      const customerResult = await this.customerService.batchCreateFromExternalContacts(external_contact_list.map(el => ({
-        ...el.external_contact,
-        userid: el.external_contact.external_userid,
-        followUserids: [el.follow_info.userid],
-        mobiles: el.follow_info.remark_mobiles,
-        name: el.follow_info.remark ?? el.external_contact.name,
-        remark_corp_name: el.follow_info.remark_corp_name
-      })));
+      const follow_info_map = new Map<string, any>();
+      const customerResult = await this.customerService.batchCreateFromExternalContacts(external_contact_list.map(el => {
+        let follow_info = el.follow_info;
+        const external_userid = el.external_contact.external_userid;
+        if (follow_info_map.has(external_userid)) {
+          const current_follow_info = follow_info_map.get(external_userid).follow_info;
+          if (current_follow_info.createtime > follow_info.createtime) {
+            follow_info = current_follow_info;
+            follow_info_map.set(external_userid, el);
+          }
+        } else {
+          follow_info_map.set(external_userid, el);
+        }
+        return {
+          ...el.external_contact,
+          userid: external_userid,
+          followUserids: [follow_info.userid],
+          mobiles: follow_info.remark_mobiles,
+          name: follow_info.remark ?? el.external_contact.name,
+          remark_corp_name: follow_info.remark_corp_name
+        }
+      }));
 
       if (data.errcode !== 0) {
         this.logger.error(`获取导出结果失败: ${data.errmsg}`);
