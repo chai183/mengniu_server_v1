@@ -250,6 +250,9 @@ export class WechatController {
         case 'batch_job_result':
           await this.wechatService.getExportResult(BatchJob.JobId);
           break;
+        case 'change_external_contact':
+          await this.wechatService.exportSimpleUser();
+          break;
         default:
           this.logger.log(`未处理的事件类型: ${Event}`);
       }
