@@ -17,6 +17,8 @@ export class WechatService {
   private readonly logger = new Logger(WechatService.name);
   private readonly token: string;
   private readonly encodingAESKey: string;
+  private isExporting: boolean = false;
+  private waitingJobid: string | null = null;
 
   constructor(
     private configService: ConfigService,
@@ -1092,6 +1094,12 @@ export class WechatService {
    * @returns 导出结果信息
    */
   async getExportResult(jobid: string): Promise<any> {
+    if (this.isExporting) {
+      this.logger.warn('导出任务正在进行中，请稍后再试');
+      this.waitingJobid = jobid;
+      return;
+    }
+    this.isExporting = true;
     try {
       this.logger.log(`获取导出结果 - 任务ID: ${jobid}`);
 
@@ -1153,8 +1161,13 @@ export class WechatService {
       }
       this.logger.error('获取导出结果时发生错误:', error);
       throw new HttpException('获取导出结果失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    } finally {
+      this.isExporting = false;
+      if (this.waitingJobid) {
+        this.getExportResult(this.waitingJobid);
+        this.waitingJobid = null;
+      }
     }
-
   }
 
   /**
