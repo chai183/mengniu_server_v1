@@ -428,10 +428,10 @@ export class WechatController {
   /**
    * 获取成员ID列表
    */
-  @Get('getUserList')
-  async getUserList() {
-    return this.wechatService.getUserList();
-  }
+  // @Get('getUserList')
+  // async getUserList() {
+  //   return this.wechatService.getUserList();
+  // }
 
 
   /**
