@@ -248,10 +248,10 @@ export class WechatController {
           this.logger.log('用户取消关注事件');
           break;
         case 'batch_job_result':
-          await this.wechatService.getExportResult(BatchJob.JobId);
+          this.wechatService.getExportResult(BatchJob.JobId);
           break;
         case 'change_external_contact':
-          await this.wechatService.exportSimpleUser();
+          this.wechatService.exportSimpleUser();
           break;
         default:
           this.logger.log(`未处理的事件类型: ${Event}`);
