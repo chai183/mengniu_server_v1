@@ -951,7 +951,6 @@ export class WechatService {
 
       const url = `https://qyapi.weixin.qq.com/cgi-bin/department/list?access_token=${accessToken}`;
       const { data } = await axios.get(url);
-      console.log(data);
       return data;
     } catch (error) {
       this.logger.error('获取部门列表时发生错误:', error);
@@ -962,11 +961,9 @@ export class WechatService {
   //获取成员ID列表
   async getUserList(): Promise<any> {
     try {
-      console.log('getUserList');
       const corpId = this.configService.get<string>('wecom.corpId');
       const corpSecret = 'xaeez8VpII131cP_C6jVJ7IbCqw0zeCI5jEuhpHjB-g';
       const res = await axios.get(`https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpId}&corpsecret=${corpSecret}`);
-      console.log(res.data);
       const url = `https://qyapi.weixin.qq.com/cgi-bin/user/list_id?access_token=${res.data.access_token}`;
       const { data } = await axios.get(url);
       const userList: any = [];
@@ -1100,7 +1097,6 @@ export class WechatService {
         responseType: 'arraybuffer'
       });
       const decryptedData = await this.decryptExportData(Buffer.from(data2));
-      console.log('userlist', decryptedData);
       const userResult = await this.userService.createBatch(decryptedData.userlist);
 
       const external_contact_list = await this.getAllExternalContacts(decryptedData.userlist.map(el => el.userid));
@@ -1119,7 +1115,6 @@ export class WechatService {
       }
 
       this.logger.log(`成功获取导出结果 - 任务ID: ${jobid}, 状态: ${data.status}`);
-      console.log(customerResult, userResult);
       return {
         success: true,
         customerResult,

@@ -123,8 +123,8 @@ export class UserService {
         totalCount: createUserDtos.length,
         createdCount,
         updatedCount,
-        createdUsers,
-        updatedUsers,
+        // createdUsers,
+        // updatedUsers,
         errors
       };
 
