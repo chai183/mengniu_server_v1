@@ -1139,7 +1139,7 @@ export class WechatService {
           userid: external_userid,
           followUserids: [follow_info.userid],
           mobiles: follow_info.remark_mobiles,
-          name: follow_info.remark ?? el.external_contact.name,
+          name: `${el.external_contact.name}(${follow_info.remark})`,
           remark_corp_name: follow_info.remark_corp_name
         }
       }));
