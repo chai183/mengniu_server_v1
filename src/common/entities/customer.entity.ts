@@ -23,7 +23,7 @@ export class Customer extends BaseEntity {
   @ApiProperty({ description: '头像' })
   avatar: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, default: 0 })
   @ApiProperty({ description: '性别' })
   gender: number;
 
@@ -52,7 +52,7 @@ export class Customer extends BaseEntity {
     enum: CustomerStatus,
     default: CustomerStatus.PENDING
   })
-  @ApiProperty({ 
+  @ApiProperty({
     description: '客户状态（0:待跟进, 1:已成交, 2:已流失）',
     enum: CustomerStatus,
     example: CustomerStatus.PENDING
@@ -74,7 +74,7 @@ export class Customer extends BaseEntity {
   remark_name: string;
 
   @Column({ nullable: true })
-  remark_corp_name: string; 
+  remark_corp_name: string;
 
   @Column({ default: true })
   isActive: boolean;
