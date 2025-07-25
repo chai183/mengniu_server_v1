@@ -32,6 +32,10 @@ export class UserService {
     return this.userRepository.findOne(id);
   }
 
+  findOneByUserid(userid: string) {
+    return this.userRepository.findOneByUserid(userid);
+  }
+
   async update(id: number, updateUserDto: UpdateUserDto) {
     //校验账号是否存在
     if (updateUserDto.account) {
