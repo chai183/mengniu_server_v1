@@ -45,7 +45,7 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const token = await this.generateJwtToken({ username: user.account, userid: user.id });
+    const token = await this.generateJwtToken({ username: user.account, userid: user.userid });
     return {
       access_token: token,
     };
