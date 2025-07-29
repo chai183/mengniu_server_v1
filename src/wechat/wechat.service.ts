@@ -1126,18 +1126,14 @@ export class WechatService {
         let follow_info = el.follow_info;
         const external_userid = el.external_contact.external_userid;
         if (follow_info_map.has(external_userid)) {
-          const current_follow_info = follow_info_map.get(external_userid).follow_info;
-          if (current_follow_info.createtime > follow_info.createtime) {
-            follow_info = current_follow_info;
-            follow_info_map.set(external_userid, el);
-          }
+          follow_info_map.set(external_userid, [...follow_info_map.get(external_userid), follow_info.userid]);
         } else {
-          follow_info_map.set(external_userid, el);
+          follow_info_map.set(external_userid, [follow_info.userid]);
         }
         return {
           ...el.external_contact,
           userid: external_userid,
-          followUserids: [follow_info.userid],
+          followUserids: follow_info_map.get(external_userid),
           mobiles: follow_info.remark_mobiles,
           name: `${el.external_contact.name}${(follow_info.remark && follow_info.remark !== el.external_contact.name) ? `(${follow_info.remark})` : ''}`,
           remark_corp_name: follow_info.remark_corp_name
