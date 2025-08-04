@@ -148,7 +148,7 @@ export class CustomerService {
   async findOneByUserid(userid: string) {
     const customer = await this.customerRepository.findOneByUserid(userid);
     if (!customer) {
-      return this.createByUserid(userid);
+      throw new BusinessException(0, '客户不存在');
     }
     return customer;
   }
