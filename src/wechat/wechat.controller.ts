@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, Req, Res, Logger, HttpStatus, Body } from '@nestjs/common';
+import { Controller, Get, Post, Query, Req, Res, Logger, HttpStatus, Body, Param } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { WechatService } from './wechat.service';
 import { WechatAuthService } from './wechat-auth.service';
@@ -459,5 +459,10 @@ export class WechatController {
   @Get('getAllExternalContacts')
   async getAllExternalContacts(@Query('userid') userid: string) {
     return this.wechatService.getAllExternalContacts([userid]);
+  }
+
+  @Get('userid/:userid')
+  findOneByUserid(@Param('userid') userid: string) {
+    return this.wechatService.findOneByUserid(userid);  
   }
 } 

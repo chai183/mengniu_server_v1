@@ -608,6 +608,7 @@ export class WechatService {
       // 先从缓存中获取
       const cachedTicket = await this.cacheService.get<string>(`agent_jsapi_ticket:${corpId}`);
       if (cachedTicket) {
+
         this.logger.log(`从缓存中获取企业(${corpId})的应用jsapi_ticket: ${cachedTicket}`);
         return cachedTicket;
       }
@@ -960,56 +961,6 @@ export class WechatService {
     }
   }
 
-  //获取成员ID列表
-  // async getUserList(): Promise<any> {
-  //   try {
-  //     const corpId = this.configService.get<string>('wecom.corpId');
-  //     const corpSecret = 'xaeez8VpII131cP_C6jVJ7IbCqw0zeCI5jEuhpHjB-g';
-  //     const res = await axios.get(`https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpId}&corpsecret=${corpSecret}`);
-  //     const url = `https://qyapi.weixin.qq.com/cgi-bin/user/list_id?access_token=${res.data.access_token}`;
-  //     const { data } = await axios.get(url);
-  //     const userList: any = [];
-  //     const userids = new Set(data.dept_user.map(el => el.userid));
-  //     for (const userid of userids) {
-  //       const { errcode, ...rest } = await this.getUserInfo(userid as string);
-  //       if (errcode === 0) {
-  //         userList.push(rest);
-  //       }
-  //     }
-  //     const external_contact_list = await this.getAllExternalContacts(Array.from(userids) as string[]);
-  //     const follow_info_map = new Map<string, any>();
-  //     const result1 = await this.customerService.batchCreateFromExternalContacts(external_contact_list.map(el => {
-  //       let follow_info = el.follow_info;
-  //       if (follow_info_map.has(el.external_contact.external_userid)) {
-  //         const current_follow_info = follow_info_map.get(el.external_contact.external_userid).follow_info;
-  //         if (current_follow_info.createtime > follow_info.createtime) {
-  //           follow_info = current_follow_info;
-  //           follow_info_map.set(el.external_contact.external_userid, el);
-  //         }
-  //       } else {
-  //         follow_info_map.set(el.external_contact.external_userid, el);
-  //       }
-  //       return {
-  //         ...el.external_contact,
-  //         userid: el.external_contact.external_userid,
-  //         followUserids: [follow_info.userid],
-  //         mobiles: follow_info.remark_mobiles,
-  //         name: follow_info.remark ?? el.external_contact.name,
-  //         remark_corp_name: follow_info.remark_corp_name
-  //       }
-  //     }));
-  //     const result2 = await this.userService.createBatch(userList);
-  //     return {
-  //       success: true,
-  //       customerResult: result1,
-  //       userResult: result2
-  //     };
-  //   } catch (error) {
-  //     this.logger.error('获取部门列表时发生错误:', error);
-  //     throw new HttpException('获取部门列表失败', HttpStatus.INTERNAL_SERVER_ERROR);
-  //   }
-  // }
-
   //获取成员信息;
   async getUserInfo(userid: string): Promise<any> {
     try {
@@ -1212,4 +1163,155 @@ export class WechatService {
     }
   }
 
+  /**
+   * 根据用户ID添加客户信息
+   * @param userid 用户ID
+   * @returns 创建的客户信息或null
+   */
+  async AddCustomerByUserid(userid: string) {
+    try {
+      this.logger.log(`开始根据用户ID(${userid})添加客户信息`);
+
+      // 参数验证
+      if (!userid || userid.trim() === '') {
+        this.logger.error('用户ID不能为空');
+        throw new HttpException('用户ID不能为空', HttpStatus.BAD_REQUEST);
+      }
+
+      // 获取外部联系人信息
+      this.logger.log(`正在获取用户(${userid})的外部联系人信息`);
+      const user = await this.getExternalContact(userid);
+
+      if (!user) {
+        this.logger.warn(`未找到用户(${userid})的外部联系人信息`);
+        return null;
+      }
+
+      // 验证返回数据结构
+      if (!user.external_contact || !user.follow_user || !Array.isArray(user.follow_user)) {
+        this.logger.error(`用户(${userid})的外部联系人数据结构异常:`, JSON.stringify(user, null, 2));
+        throw new HttpException('外部联系人数据结构异常', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      const { external_contact, follow_user } = user;
+
+      // 验证follow_user数组不为空
+      if (follow_user.length === 0) {
+        this.logger.warn(`用户(${userid})没有跟进人信息`);
+        throw new HttpException('用户没有跟进人信息', HttpStatus.BAD_REQUEST);
+      }
+
+      const follow_info = follow_user[0];
+
+      // 验证follow_info结构
+      if (!follow_info || !follow_info.userid) {
+        this.logger.error(`用户(${userid})的跟进人信息结构异常:`, JSON.stringify(follow_info, null, 2));
+        throw new HttpException('跟进人信息结构异常', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      // 构建客户数据
+      const customerData = {
+        ...external_contact,
+        userid: userid,
+        followUserids: follow_user.map(el => el.userid),
+        mobiles: follow_info.remark_mobiles || [],
+        name: `${external_contact.name || '未知客户'}${(follow_info.remark && follow_info.remark !== external_contact.name) ? `(${follow_info.remark})` : ''}`,
+        remark_corp_name: follow_info.remark_corp_name || ''
+      };
+
+      this.logger.log(`准备创建客户信息 - 用户ID: ${userid}, 客户名称: ${customerData.name}`);
+
+      // 创建客户记录
+      const result = await this.customerService.create(customerData);
+
+      this.logger.log(`成功创建客户信息 - 用户ID: ${userid}, 客户ID: ${result?.id || '未知'}`);
+
+      return result;
+
+    } catch (error) {
+      // 记录详细错误信息
+      this.logger.error(`根据用户ID(${userid})添加客户信息时发生错误:`, error);
+
+      // 如果是已知的HTTP异常，直接抛出
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      // 如果是axios请求错误，提供更友好的错误信息
+      if (error.response) {
+        const { status, data } = error.response;
+        this.logger.error(`HTTP请求失败 - 状态码: ${status}, 响应数据:`, data);
+        throw new HttpException(`获取用户信息失败: ${data?.errmsg || '网络请求异常'}`, HttpStatus.BAD_REQUEST);
+      }
+
+      // 如果是网络错误
+      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        this.logger.error('网络连接失败:', error.message);
+        throw new HttpException('网络连接失败，请检查网络设置', HttpStatus.SERVICE_UNAVAILABLE);
+      }
+
+      // 如果是超时错误
+      if (error.code === 'ETIMEDOUT') {
+        this.logger.error('请求超时:', error.message);
+        throw new HttpException('请求超时，请稍后重试', HttpStatus.REQUEST_TIMEOUT);
+      }
+
+      // 其他未知错误
+      this.logger.error('未知错误类型:', error);
+      throw new HttpException('添加客户信息失败，请稍后重试', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /**
+   * 根据用户ID查找客户信息，如果不存在则自动添加
+   * @param userid 用户ID
+   * @returns 客户信息
+   */
+  async findOneByUserid(userid: string) {
+    try {
+      this.logger.log(`开始查找用户ID(${userid})的客户信息`);
+
+      // 参数验证
+      if (!userid || userid.trim() === '') {
+        this.logger.error('用户ID不能为空');
+        throw new HttpException('用户ID不能为空', HttpStatus.BAD_REQUEST);
+      }
+
+      // 先从数据库查找
+      this.logger.log(`从数据库查找用户(${userid})的客户信息`);
+      const existingCustomer = await this.customerService.findOneByUserid(userid);
+
+      if (existingCustomer) {
+        this.logger.log(`在数据库中找到用户(${userid})的客户信息`);
+        return existingCustomer;
+      }
+    } catch (error) {
+      // 数据库中没有找到，尝试从企业微信获取并添加
+      this.logger.log(`数据库中没有找到用户(${userid})的客户信息，尝试从企业微信获取`);
+
+      try {
+        const newCustomer = await this.AddCustomerByUserid(userid);
+
+        if (newCustomer) {
+          this.logger.log(`成功为用户(${userid})添加客户信息`);
+          return newCustomer;
+        } else {
+          this.logger.warn(`无法为用户(${userid})添加客户信息，返回null`);
+          return null;
+        }
+      } catch (addError) {
+        this.logger.error(`为用户(${userid})添加客户信息时发生错误:`, addError);
+
+        // 如果是已知的HTTP异常，直接抛出
+        if (addError instanceof HttpException) {
+          throw addError;
+        }
+
+        // 其他错误包装为HTTP异常
+        throw new HttpException(`获取客户信息失败: ${addError.message || '未知错误'}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+
+      // this.logger.error(`查找用户ID(${userid})的客户信息时发生错误:`, error);
+    }
+  }
 } 
