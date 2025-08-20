@@ -251,7 +251,7 @@ export class WechatController {
           this.wechatService.getExportResult(BatchJob.JobId);
           break;
         case 'change_external_contact':
-          this.wechatService.exportSimpleUser();
+          // this.wechatService.exportSimpleUser();
           break;
         default:
           this.logger.log(`未处理的事件类型: ${Event}`);
@@ -442,7 +442,7 @@ export class WechatController {
    */
   @Get('exportMembers')
   async exportMembers() {
-    return this.wechatService.exportSimpleUser();
+    return this.wechatService.updateCustomer();
   }
 
   /**
@@ -464,5 +464,10 @@ export class WechatController {
   @Get('userid/:userid')
   findOneByUserid(@Param('userid') userid: string) {
     return this.wechatService.findOneByUserid(userid);  
+  }
+
+  @Get('updateCustomer')
+  updateCustomer() {
+    return this.wechatService.updateCustomer();  
   }
 } 

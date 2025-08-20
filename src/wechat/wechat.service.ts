@@ -954,7 +954,7 @@ export class WechatService {
 
       const url = `https://qyapi.weixin.qq.com/cgi-bin/department/list?access_token=${accessToken}`;
       const { data } = await axios.get(url);
-      return data;
+      return data.department;
     } catch (error) {
       this.logger.error('获取部门列表时发生错误:', error);
       throw new HttpException('获取部门列表失败', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -1312,6 +1312,118 @@ export class WechatService {
       }
 
       // this.logger.error(`查找用户ID(${userid})的客户信息时发生错误:`, error);
+    }
+  }
+  /**
+   * 获取部门成员列表
+   * @param departmentId 部门ID
+   * @returns 部门成员的userid列表
+   */
+  async getDepartmentUserList(departmentId: number): Promise<string[]> {
+    try {
+      this.logger.log(`获取部门(${departmentId})成员列表`);
+      const accessToken = await this.getAccessToken();
+      if (!accessToken) {
+        this.logger.error('获取访问令牌失败');
+        throw new HttpException('获取访问令牌失败', HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+      const url = `https://qyapi.weixin.qq.com/cgi-bin/user/list?access_token=${accessToken}&department_id=${departmentId}`;
+      const { data } = await axios.get(url);
+      if (data.errcode !== 0) {
+        this.logger.error(`获取部门成员失败: ${data.errmsg}`);
+        throw new HttpException(`获取部门成员失败: ${data.errmsg}`, HttpStatus.BAD_REQUEST);
+      }
+      // 返回userid数组
+      return data.userlist.map((user: any) => user.userid);
+    } catch (error) {
+      this.logger.error('获取部门成员时发生错误:', error);
+      throw new HttpException('获取部门成员失败', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async updateCustomer() {
+    this.logger.log('开始更新客户信息');
+    try {
+      // 获取所有部门
+      const departmentList = await this.getDepartmentList();
+      this.logger.log(`获取到部门数量: ${departmentList.length}`);
+      const allUserList: string[] = [];
+      for (const department of departmentList) {
+        try {
+          const userList = await this.getDepartmentUserList(department.id);
+          this.logger.log(`部门(${department.id})成员数: ${userList.length}`);
+          allUserList.push(...userList);
+        } catch (err) {
+          this.logger.error(`获取部门(${department.id})成员列表失败:`, err);
+        }
+      }
+
+      const idList = [...new Set(allUserList)];
+      this.logger.log(`去重后用户总数: ${idList.length}`);
+      const userList: any[] = [];
+      for (const id of idList) {
+        try {
+          const user = await this.getUserInfo(id);
+          userList.push(user);
+        } catch (err) {
+          this.logger.error(`获取用户(${id})信息失败:`, err);
+        }
+      }
+
+      let userResult;
+      try {
+        userResult = await this.userService.createBatch(userList);
+        this.logger.log('批量创建用户成功');
+      } catch (err) {
+        this.logger.error('批量创建用户失败:', err);
+        userResult = { error: err.message || err };
+      }
+
+      let external_contact_list;
+      try {
+        external_contact_list = await this.getAllExternalContacts(idList);
+        this.logger.log(`获取外部联系人数量: ${external_contact_list.length}`);
+      } catch (err) {
+        this.logger.error('获取外部联系人失败:', err);
+        external_contact_list = [];
+      }
+
+      const follow_info_map = new Map<string, any>();
+      let customerResult;
+      try {
+        customerResult = await this.customerService.batchCreateFromExternalContacts(
+          external_contact_list.map(el => {
+            let follow_info = el.follow_info;
+            const external_userid = el.external_contact.external_userid;
+            if (follow_info_map.has(external_userid)) {
+              follow_info_map.set(external_userid, [...follow_info_map.get(external_userid), follow_info.userid]);
+            } else {
+              follow_info_map.set(external_userid, [follow_info.userid]);
+            }
+            return {
+              ...el.external_contact,
+              userid: external_userid,
+              followUserids: follow_info_map.get(external_userid),
+              mobiles: follow_info.remark_mobiles,
+              name: `${el.external_contact.name}${(follow_info.remark && follow_info.remark !== el.external_contact.name) ? `(${follow_info.remark})` : ''}`,
+              remark_corp_name: follow_info.remark_corp_name
+            }
+          })
+        );
+        this.logger.log('批量创建客户成功');
+      } catch (err) {
+        this.logger.error('批量创建客户失败:', err);
+        customerResult = { error: err.message || err };
+      }
+
+      this.logger.log('客户信息更新完成');
+      return {
+        userResult,
+        customerResult
+      }
+    } catch (error) {
+      this.logger.error('更新客户信息时发生错误:', error);
+      throw new HttpException('更新客户信息失败', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 } 
