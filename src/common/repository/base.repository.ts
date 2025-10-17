@@ -84,7 +84,7 @@ export class BaseRepository<T extends BaseEntity> {
         where[key] = In(where[key]);
       } else if (typeof where[key] === 'string' && where[key]) {
         // 处理模糊查询
-        if (key === 'customerId') {
+        if (key === 'customerId' || key === 'creater') {
           // 客户id,不用模糊查询
           where[key] = where[key];
         } else {
