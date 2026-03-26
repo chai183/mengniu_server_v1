@@ -4,13 +4,22 @@ import { Repository } from 'typeorm';
 import { FollowUp } from '../common/entities';
 import { CreateFollowUpDto, UpdateFollowUpDto } from './dto';
 import { BaseRepository, InjectBaseRepository } from '../common/repository/base.repository';
+import { CustomerService } from '../customer/customer.service';
 
 @Injectable()
 export class FollowUpService {
+
+  constructor(
+    private readonly customerService: CustomerService,
+  ) {}
+
   @InjectBaseRepository(FollowUp)
   private readonly followUpRepository: BaseRepository<FollowUp>;
 
   async create(createFollowUpDto: CreateFollowUpDto): Promise<FollowUp> {
+
+    await this.customerService.update(createFollowUpDto.customerId, { lastFollowTime: new Date() });
+
     return this.followUpRepository.create(createFollowUpDto);
   }
 

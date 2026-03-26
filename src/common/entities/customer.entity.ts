@@ -79,4 +79,7 @@ export class Customer extends BaseEntity {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ nullable: true })
+  lastFollowTime: Date;
+
 } 

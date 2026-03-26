@@ -1,25 +1,55 @@
-import { Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, UploadedFile, UseInterceptors, Body } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { OssService } from './oss.service';
 
 @Controller('upload')
 export class UploadController {
+  constructor(private readonly ossService: OssService) { }
 
   @Post()
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: '/static',
-        filename: (req, file, callback) => {
-          // 生成唯一文件名
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          callback(null, `${uniqueSuffix}${extname(file.originalname)}`);
-        },
-      }),
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return file;
+    if (!file) {
+      throw new Error('请选择要上传的文件');
+    }
+
+    try {
+      // 使用OSS服务上传文件
+      const result = await this.ossService.uploadFile(file);
+
+      return {
+        url: result.url,
+        filename: result.filename,
+        size: result.size,
+        mimetype: result.mimetype,
+        originalName: file.originalname,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+        data: null,
+      };
+    }
+  }
+
+  @Post('delete')
+  async deleteFile(@Body('filename') filename: string) {
+    if (!filename) {
+      throw new Error('请提供要删除的文件名');
+    }
+
+    try {
+      await this.ossService.deleteFile(filename);
+      return {
+        success: true,
+        message: '文件删除成功',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
   }
 }

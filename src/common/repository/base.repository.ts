@@ -1,4 +1,4 @@
-import { Repository, FindOptionsWhere, Between, Like, ObjectLiteral, DeepPartial, UpdateResult, DeleteResult, FindOptionsOrder, In } from 'typeorm';
+import { Repository, FindOptionsWhere, Between, Like, ObjectLiteral, DeepPartial, UpdateResult, DeleteResult, FindOptionsOrder, In, LessThan, IsNull } from 'typeorm';
 import { BusinessException } from '../exceptions/business.exception';
 import { Inject } from '@nestjs/common';
 
@@ -32,10 +32,10 @@ export class BaseRepository<T extends BaseEntity> {
     if (!entity) {
       throw new BusinessException(1001, '记录不存在');
     }
-    
+
     // 使用Object.assign更新实体，TypeORM会自动过滤不存在的字段
     Object.assign(entity, data);
-    
+
     return this.repository.save(entity);
   }
 
@@ -49,9 +49,9 @@ export class BaseRepository<T extends BaseEntity> {
   }
 
   async findAllPage(query: any, { relations }: { relations?: string[] } = {}) {
-    const { page, limit, createTime, updateTime, ...rest } = query;
+    const { page, limit, createTime, updateTime, lastFollowTime, ...rest } = query;
 
-    const where: any = { isDeleted: false, ...rest };
+    let where: any = { isDeleted: false, ...rest };
 
     // 处理时间范围查询
     if (createTime) {
@@ -93,6 +93,15 @@ export class BaseRepository<T extends BaseEntity> {
 
       }
     });
+
+    if( lastFollowTime ){
+      // lastFollowTime时间小于lastFollowTime或lastFollowTime为空
+      where.lastFollowTime = IsNull();
+      where = [
+        where,
+        { lastFollowTime: LessThan(lastFollowTime) },
+      ]
+    }
 
     const [data, total] = await this.repository.findAndCount({
       skip: (page - 1) * limit,

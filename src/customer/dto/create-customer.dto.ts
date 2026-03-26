@@ -25,4 +25,6 @@ export class CreateCustomerDto {
   @IsOptional()
   images: string;
 
+  lastFollowTime: Date;
+
 }
